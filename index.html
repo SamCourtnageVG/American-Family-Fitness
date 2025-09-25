@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quest Bingo – LocalStorage Edition</title>
+  <style>
+    :root {
+      --bg: #0f172a;            /* slate-900 */
+      --card: #111827;          /* gray-900 */
+      --muted: #475569;         /* slate-600 */
+      --text: #e5e7eb;          /* gray-200 */
+      --accent: #22c55e;        /* green-500 */
+      --accent-2: #06b6d4;      /* cyan-500 */
+      --danger: #ef4444;        /* red-500 */
+      --warning: #f59e0b;       /* amber-500 */
+      --ring: rgba(34,197,94,.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text); background: radial-gradient(1200px 800px at 20% 10%, #111827 0, #0b1226 60%, #070d1d 100%);
+    }
+    .wrap { max-width: 960px; margin: 24px auto; padding: 16px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    h1 { font-size: clamp(1.25rem, 1.2rem + 1.2vw, 2rem); margin: 0; letter-spacing:.3px; }
+    .sub { color: var(--muted); font-size:.95rem; }
+    .controls { display:flex; gap:8px; flex-wrap:wrap; }
+    button, .btn {
+      appearance:none; border:1px solid #1f2937; background:#0b1222; color:var(--text);
+      padding:.6rem .85rem; border-radius:12px; cursor:pointer; font-weight:600; transition:.15s ease;
+    }
+    button:hover, .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,.35); border-color:#334155; }
+    .btn-accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #06110a; }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #f97316); border: none; color: #1b0a05; }
+
+    .grid {
+      margin-top:16px; display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;
+    }
+    .tile {
+      position:relative; border:1px solid #1f2937; border-radius:16px; padding:14px 12px 12px; background: linear-gradient(180deg, #0f172a, #0a1327);
+      min-height: 110px; display:flex; flex-direction:column; justify-content:space-between; outline:none;
+    }
+    .tile:focus { box-shadow: 0 0 0 3px var(--ring); }
+    .tile .title { font-size:.98rem; line-height:1.25rem; font-weight:600; }
+    .tile .meta { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:8px; }
+    .badge { font-size:.75rem; padding:.2rem .5rem; border-radius:999px; border:1px solid #1f2937; color:#cbd5e1; }
+    .stars { letter-spacing: 1px; color: var(--warning); font-size:.85rem; }
+    .points { color:#93c5fd; font-weight:700; font-variant-numeric: tabular-nums; }
+
+    .check {
+      position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:8px; border:1px solid #1f2937; display:grid; place-items:center;
+      background:#0b1222; font-weight:800; user-select:none;
+    }
+    .tile.done {
+      background: linear-gradient(180deg, #10201a, #0c1b16);
+      border-color: #14532d;
+    }
+    .tile.done .title { text-decoration: line-through; color:#a7f3d0; }
+
+    .footer {
+      margin-top:16px; display:grid; grid-template-columns: 1fr; gap:10px;
+    }
+    .stats { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .progress {
+      --p: 0%; position:relative; height:12px; background:#0b1222; border:1px solid #1f2937; border-radius:999px; overflow:hidden; flex:1;
+    }
+    .progress > i { position:absolute; inset:0; width:var(--p); background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .stat { background:#0b1222; border:1px solid #1f2937; padding:.5rem .75rem; border-radius:12px; font-weight:700; }
+
+    .hint { color: var(--muted); font-size:.9rem; }
+    .board-note { color:#94a3b8; font-size:.85rem; margin-top:6px; }
+
+    .row-bonus { display:flex; gap:6px; flex-wrap:wrap; }
+    .tag { border:1px dashed #334155; padding:.2rem .5rem; border-radius:999px; font-size:.75rem; color:#cbd5e1; }
+
+    @media (max-width: 560px) {
+      .grid { gap:8px; }
+      .tile { min-height: 96px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="application" aria-label="Quest Bingo">
+    <header>
+      <div>
+        <h1>Quest Bingo</h1>
+        <div class="sub">Lightweight, gamified bingo with points & line bonuses. No backend — just LocalStorage.</div>
+        <div class="board-note">Customize the <code>CHALLENGES</code> array in the source. Replace the Google Form placeholders in <code>buildFormUrl()</code>.</div>
+      </div>
+      <div class="controls" role="toolbar" aria-label="Controls">
+        <button id="btn-submit" class="btn btn-accent" title="Open prefilled form in a new tab">Submit to Club</button>
+        <button id="btn-reset" class="btn btn-danger" title="Reset local progress">Reset</button>
+      </div>
+    </header>
+
+    <section class="footer">
+      <div class="stats" aria-live="polite">
+        <div class="stat">Score: <span id="score">0</span></div>
+        <div class="stat">Completed: <span id="completed">0</span>/25</div>
+        <div class="stat">Lines: <span id="lines">0</span></div>
+        <div class="progress" aria-label="Board completion">
+          <i id="bar"></i>
+        </div>
+      </div>
+      <div class="row-bonus" id="bonusTags"></div>
+    </section>
+
+    <main class="grid" id="grid" aria-label="Bingo Grid" role="grid"></main>
+
+    <p class="hint">Tip: Tap tiles to toggle completion. Points vary by difficulty (★/★★/★★★). Completing a full line adds a bonus. Progress is saved on this device.</p>
+  </div>
+
+<script>
+// ======== CONFIG ========
+const BOARD_KEY = 'questBingo.v1';
+const FORM_BASE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform'; // TODO: replace
+const ENTRY_MAP = {
+  checked: 'entry.123456', // array of checked indexes
+  score:   'entry.123457',
+  lines:   'entry.123458',
+  player:  'entry.123459'  // optional short name prompt
+};
+
+// Define 25 challenges (text + difficulty 1..3). Edit freely for each client.
+const CHALLENGES = [
+  { text: 'Attend a class', diff: 1 },
+  { text: 'Share a photo', diff: 1 },
+  { text: 'Invite a friend', diff: 2 },
+  { text: 'Try a new activity', diff: 2 },
+  { text: 'Hit 8k steps', diff: 1 },
+  { text: 'Drink 2L water', diff: 1 },
+  { text: 'Coach’s choice', diff: 3 },
+  { text: 'Stretch 10 min', diff: 1 },
+  { text: 'Volunteer shift', diff: 3 },
+  { text: 'Post a tip', diff: 2 },
+  { text: 'Core workout', diff: 2 },
+  { text: 'Healthy recipe', diff: 1 },
+  { text: 'Team photo', diff: 2 },
+  { text: 'Try a class type', diff: 2 },
+  { text: 'Park workout', diff: 2 },
+  { text: 'Mentor someone', diff: 3 },
+  { text: 'New PR attempt', diff: 3 },
+  { text: 'Hydration streak', diff: 2 },
+  { text: 'Morning warmup', diff: 1 },
+  { text: 'Log 20 mins', diff: 1 },
+  { text: 'Community post', diff: 1 },
+  { text: 'Buddy challenge', diff: 2 },
+  { text: 'Mobility session', diff: 2 },
+  { text: 'Mindfulness 5m', diff: 1 },
+  { text: 'Attend event', diff: 3 }
+];
+
+// Scoring: base per difficulty
+const POINTS = { 1: 5, 2: 12, 3: 20 };
+const LINE_BONUS = 30; // bonus points per completed line (row/col/diag)
+
+// ======== STATE ========
+const defaultState = () => ({
+  checked: Array(25).fill(false),
+  score: 0,
+  lines: [], // store canonical line ids that are completed
+});
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(BOARD_KEY)) ?? defaultState(); }
+  catch { return defaultState(); }
+}
+function save(s) { localStorage.setItem(BOARD_KEY, JSON.stringify(s)); }
+
+let state = load();
+
+// ======== DOM HELPERS ========
+const $ = sel => document.querySelector(sel);
+const grid = $('#grid');
+const scoreEl = $('#score');
+const completedEl = $('#completed');
+const linesEl = $('#lines');
+const barEl = $('#bar');
+const bonusTags = $('#bonusTags');
+
+// Precompute all 12 bingo lines: 5 rows + 5 cols + 2 diags
+const LINES = (() => {
+  const lines = [];
+  // rows
+  for (let r = 0; r < 5; r++) lines.push(Array.from({length:5}, (_,c)=> r*5+c));
+  // cols
+  for (let c = 0; c < 5; c++) lines.push(Array.from({length:5}, (_,r)=> r*5+c));
+  // diags
+  lines.push([0,6,12,18,24]);
+  lines.push([4,8,12,16,20]);
+  return lines;
+})();
+
+function stars(n){ return '★'.repeat(n); }
+
+function render() {
+  grid.innerHTML = '';
+  CHALLENGES.forEach((ch, i) => {
+    const tile = document.createElement('button');
+    tile.className = 'tile' + (state.checked[i] ? ' done' : '');
+    tile.setAttribute('role','gridcell');
+    tile.setAttribute('aria-pressed', state.checked[i] ? 'true' : 'false');
+    tile.setAttribute('data-i', i);
+    tile.innerHTML = `
+      <div class="check" aria-hidden="true">${state.checked[i] ? '✓' : ''}</div>
+      <div class="title">${ch.text}</div>
+      <div class="meta">
+        <span class="badge stars" title="Difficulty">${stars(ch.diff)}</span>
+        <span class="points" title="Points">+${POINTS[ch.diff]}</span>
+      </div>
+    `;
+    tile.addEventListener('click', onToggle);
+    tile.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') onToggle(e); });
+    grid.appendChild(tile);
+  });
+  updateStats();
+}
+
+function onToggle(e){
+  const i = +e.currentTarget.getAttribute('data-i');
+  state.checked[i] = !state.checked[i];
+  recompute();
+  save(state);
+  render();
+}
+
+function recompute(){
+  // score from tiles
+  let score = 0;
+  state.checked.forEach((v,i)=>{ if(v) score += POINTS[CHALLENGES[i].diff]; });
+
+  // determine completed lines
+  const completedLines = [];
+  LINES.forEach((line, idx)=>{
+    if (line.every(i => state.checked[i])) completedLines.push(idx);
+  });
+
+  // add line bonus (each unique line once)
+  score += completedLines.length * LINE_BONUS;
+
+  state.score = score;
+  state.lines = completedLines;
+}
+
+function updateStats(){
+  scoreEl.textContent = state.score;
+  const completedCount = state.checked.filter(Boolean).length;
+  completedEl.textContent = completedCount;
+  linesEl.textContent = state.lines.length;
+  barEl.style.setProperty('--p', `${Math.round((completedCount/25)*100)}%`);
+
+  // tags for which lines are complete
+  bonusTags.innerHTML = '';
+  state.lines.forEach(id=>{
+    const tag = document.createElement('span');
+    const label = lineLabel(id);
+    tag.className = 'tag';
+    tag.textContent = `Line bonus: ${label}`;
+    bonusTags.appendChild(tag);
+  });
+}
+
+function lineLabel(id){
+  if (id < 5) return `Row ${id+1}`;
+  if (id < 10) return `Col ${id-4}`;
+  return id === 10 ? 'Diag ↘' : 'Diag ↙';
+}
+
+// ======== SUBMIT ========
+function buildFormUrl(){
+  const params = new URLSearchParams();
+  const checkedIdx = state.checked.map((v,i)=> v? i : null).filter(v=>v!==null);
+  params.set(ENTRY_MAP.checked, JSON.stringify(checkedIdx));
+  params.set(ENTRY_MAP.score, String(state.score));
+  params.set(ENTRY_MAP.lines, String(state.lines.length));
+  // Optional short prompt for player name. The Form can make this required.
+  const who = prompt('Enter your name or member ID (optional):', localStorage.getItem('questBingo.name') || '');
+  if (who !== null) {
+    localStorage.setItem('questBingo.name', who);
+    params.set(ENTRY_MAP.player, who);
+  }
+  return `${FORM_BASE}?${params.toString()}`;
+}
+
+$('#btn-submit').addEventListener('click', () => {
+  const url = buildFormUrl();
+  window.open(url, '_blank', 'noopener');
+});
+
+$('#btn-reset').addEventListener('click', () => {
+  if (confirm('Reset local progress? This will only affect this device.')) {
+    state = defaultState();
+    save(state);
+    render();
+  }
+});
+
+// ======== INIT ========
+recompute();
+render();
+</script>
+</body>
+</html>

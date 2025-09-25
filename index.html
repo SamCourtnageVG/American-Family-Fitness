@@ -40,6 +40,14 @@
     .lock{opacity:.5}
     .ok{color:var(--good)}
     .no{color:var(--bad)}
+
+    /* On-screen controls (mobile) */
+    .onscreen{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:10px;z-index:6}
+    .osbtn{appearance:none;border:2px solid var(--amfam-blue);background:#fff;color:var(--amfam-blue);padding:.6rem .9rem;border-radius:12px;font-weight:900}
+    @media (min-width:900px){.onscreen{display:none}}
+
+    /* Pause button overlay */
+    .pauseBtn{position:absolute;top:10px;right:10px;z-index:6;border:none;background:rgba(255,255,255,.9);border:2px solid var(--amfam-blue);border-radius:10px;padding:.4rem .6rem;font-weight:900;color:var(--amfam-blue)}
   </style>
 </head>
 <body>
@@ -61,6 +69,12 @@
     <section class="board">
       <div class="gameWrap">
         <canvas id="game" aria-label="Runner canvas"></canvas>
+        <button id="btnPauseOverlay" class="pauseBtn" title="Pause">⏸</button>
+        <div class="onscreen" aria-hidden="false">
+          <button class="osbtn" id="btnLeft">◀</button>
+          <button class="osbtn" id="btnJump">⤒</button>
+          <button class="osbtn" id="btnRight">▶</button>
+        </div>
         <div class="hud" id="hud">
           <div class="pill">Dist: <span id="pDist">0</span> m</div>
           <div class="pill">Coins: <span id="pCoins">0</span></div>
@@ -86,14 +100,14 @@
 
 <script>
 // ========================= CONFIG =========================
-const STORAGE_KEY = 'amfam.runner.v1';
+const STORAGE_KEY = 'amfam.runner.v2';
 const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
 const MAPS = [
-  {id:'gym', name:'Gym Floor', sky:'#a3c6ff', road:'#eaf1ff', lane:'#0054a6', accent:'#e11d2b', speed:7, unlock:null},
-  {id:'pool', name:'Pool Deck', sky:'#9ddcf8', road:'#e6fbff', lane:'#0ea5e9', accent:'#2563eb', speed:7.5, unlock:{type:'goal', key:'run500'}},
-  {id:'studio', name:'Group Studio', sky:'#ffdfe9', road:'#fff2f7', lane:'#e11d2b', accent:'#0054a6', speed:8, unlock:{type:'goal', key:'collect50'}},
-  {id:'city', name:'City Dash', sky:'#cfe0ff', road:'#f2f6ff', lane:'#111827', accent:'#0ea5e9', speed:8.5, unlock:{type:'club', key:'clubTask'}}
+  {id:'gym', name:'Gym Floor', sky:'#a3c6ff', road:'#eaf1ff', lane:'#0054a6', accent:'#e11d2b', speed:6.8, unlock:null},
+  {id:'pool', name:'Pool Deck', sky:'#9ddcf8', road:'#e6fbff', lane:'#0ea5e9', accent:'#2563eb', speed:7.2, unlock:{type:'goal', key:'run500'}},
+  {id:'studio', name:'Group Studio', sky:'#ffdfe9', road:'#fff2f7', lane:'#e11d2b', accent:'#0054a6', speed:7.6, unlock:{type:'goal', key:'collect50'}},
+  {id:'city', name:'City Dash', sky:'#cfe0ff', road:'#f2f6ff', lane:'#111827', accent:'#0ea5e9', speed:8.3, unlock:{type:'club', key:'clubTask'}}
 ];
 
 const CHALLENGES = [
@@ -126,8 +140,12 @@ const menuMsg = document.getElementById('menuMsg');
 const btnResume = document.getElementById('btnResume');
 const btnPlay = document.getElementById('btnPlay');
 const btnPause = document.getElementById('btnPause');
+const btnPauseOverlay = document.getElementById('btnPauseOverlay');
 const btnReset = document.getElementById('btnReset');
 const challengeList = document.getElementById('challengeList');
+const btnLeft = document.getElementById('btnLeft');
+const btnRight = document.getElementById('btnRight');
+const btnJump = document.getElementById('btnJump');
 
 // Build map select
 function refreshMapSelect(){
@@ -179,8 +197,9 @@ const game = {
   map: MAPS.find(m=> m.id === (state.lastMap || 'gym')) || MAPS[0],
   lane:1, targetLane:1,
   jumpT:0, jumping:false,
-  distance:0, coins:0, speed:7,
+  distance:0, coins:0, speed:6.8,
   spawnT:0, coinT:0,
+  countdownT:0,
   objs:[], coinsArr:[]
 };
 
@@ -203,7 +222,7 @@ function resize(){
 window.addEventListener('resize', resize); resize();
 
 function resetRun(){
-  game.running = false; game.over = false;
+  game.over = false;
   game.lane = 1; game.targetLane = 1; game.jumping = false; game.jumpT = 0;
   game.distance = 0; game.coins = 0; game.spawnT = 0; game.coinT = 0; game.objs=[]; game.coinsArr=[];
 }
@@ -212,11 +231,19 @@ resetRun();
 function start(){
   if(menu) menu.hidden = true;
   resetRun();
-  game.running = true; game.lastT = performance.now();
+  game.countdownT = 3; // seconds
+  game.lastT = performance.now();
+  game.running = true;
   requestAnimationFrame(loop);
 }
 
-function pause(){ game.running = false; menuTitle.textContent = 'Paused'; menuMsg.textContent = 'Tap Resume to continue.'; menu.hidden = false; }
+function pause(){
+  if(!game.running) return;
+  game.running = false;
+  menuTitle.textContent = 'Paused';
+  menuMsg.textContent = 'Tap Resume or press Play.';
+  menu.hidden = false;
+}
 function gameOver(){
   game.running = false; game.over = true; menuTitle.textContent = 'Game Over'; menuMsg.textContent = 'You hit an obstacle. Play again?'; menu.hidden = false;
   // totals
@@ -227,13 +254,19 @@ function gameOver(){
   recalcUnlocks(); save(); refreshChallenges(); refreshMapSelect();
 }
 
-btnPlay.onclick = ()=>{ start(); };
-btnPause.onclick = ()=>{ if(game.running) pause(); };
-btnReset.onclick = ()=>{ if(confirm('Reset all saved progress on this device?')){ state = DEFAULT_STATE(); save(); refreshMapSelect(); refreshChallenges(); resetRun(); pBest.textContent = state.meta.best; } };
+btnPlay.onclick = ()=> start();
+btnPause.onclick = ()=> pause();
+btnPauseOverlay.onclick = ()=> pause();
+btnReset.onclick = ()=>{
+  if(confirm('Reset all saved progress on this device?')){
+    state = DEFAULT_STATE(); save(); refreshMapSelect(); refreshChallenges(); resetRun(); pBest.textContent = state.meta.best;
+  }
+};
 btnResume.onclick = ()=>{ menu.hidden = true; game.running = true; game.lastT = performance.now(); requestAnimationFrame(loop); };
 
 // ========================= INPUT =========================
 window.addEventListener('keydown', e => {
+  if(e.key==='Escape') return pause();
   if(e.key==='ArrowLeft' || e.key==='a') game.targetLane = Math.max(0, game.targetLane-1);
   if(e.key==='ArrowRight'|| e.key==='d') game.targetLane = Math.min(2, game.targetLane+1);
   if(e.key==='ArrowUp' || e.key==='w' || e.code==='Space') jump();
@@ -247,6 +280,9 @@ canvas.addEventListener('pointerup', e=>{
   else if(dy<0){ jump(); }
   touchStart = null;
 });
+btnLeft.onclick = ()=> game.targetLane = Math.max(0, game.targetLane-1);
+btnRight.onclick = ()=> game.targetLane = Math.min(2, game.targetLane+1);
+btnJump.onclick = ()=> jump();
 
 function jump(){ if(!game.jumping){ game.jumping = true; game.jumpT = 0; } }
 
@@ -261,7 +297,7 @@ function laneX(lane, z){
 }
 
 function zToY(z){
-  const h = canvas.height; const horizon = h*0.35; const ground = h*0.95;
+  const h = canvas.height; const horizon = h*0.35; const ground = h*0.96;
   const t = 1/(z+1); // 1 near, small when far
   return Math.round( lerp(ground, horizon, 1 - t) ); // far -> near horizon
 }
@@ -281,6 +317,12 @@ function spawnCoin(){
 }
 
 function update(dt){
+  // Countdown phase
+  if(game.countdownT && game.countdownT>0){
+    game.countdownT -= dt;
+    draw(0, Math.ceil(Math.max(0, game.countdownT)));
+    return;
+  }
   // lane smoothing
   game.lane += (game.targetLane - game.lane)*Math.min(1, dt*10);
   // jump
@@ -293,29 +335,29 @@ function update(dt){
   pCoins.textContent = game.coins;
   pBest.textContent = state.meta.best;
 
-  game.spawnT -= dt; if(game.spawnT<=0){ spawnObstacle(); game.spawnT = 0.8 + Math.random()*0.6; }
-  game.coinT -= dt; if(game.coinT<=0){ spawnCoin(); game.coinT = 0.5 + Math.random()*0.8; }
+  game.spawnT -= dt; if(game.spawnT<=0){ spawnObstacle(); game.spawnT = 0.9 + Math.random()*0.6; }
+  game.coinT  -= dt; if(game.coinT <=0){ spawnCoin();    game.coinT  = 0.6 + Math.random()*0.8; }
 
   // move objects forward
   [...game.objs].forEach(o => { o.z -= (game.speed*dt); if(o.z<=0){ const idx = game.objs.indexOf(o); if(idx>=0) game.objs.splice(idx,1); } });
   [...game.coinsArr].forEach(c => { c.z -= (game.speed*dt); if(c.z<=0){ const idx = game.coinsArr.indexOf(c); if(idx>=0) game.coinsArr.splice(idx,1); } });
 
-  // collisions
+  // collisions (more forgiving)
   for(const o of game.objs){
-    if(o.z<0.25 && Math.abs(game.lane - o.lane)<0.34){
+    if(o.z<0.22 && Math.abs(game.lane - o.lane)<0.34){
       const hitAir = jumpY > (o.type==='low' ? 10*DPR : 30*DPR); // need a bit of lift
       if(!hitAir){ gameOver(); return; }
     }
   }
   for(const c of [...game.coinsArr]){
-    if(c.z<0.3 && Math.abs(game.lane - c.lane)<0.34){ game.coins++; const i = game.coinsArr.indexOf(c); if(i>=0) game.coinsArr.splice(i,1); }
+    if(c.z<0.25 && Math.abs(game.lane - c.lane)<0.34){ game.coins++; const i = game.coinsArr.indexOf(c); if(i>=0) game.coinsArr.splice(i,1); }
   }
 
   // draw
   draw(jumpY);
 }
 
-function draw(jumpY){
+function draw(jumpY, countdown){
   const w = canvas.width, h = canvas.height;
   // bg
   ctx.clearRect(0,0,w,h);
@@ -353,6 +395,13 @@ function draw(jumpY){
   const pw = w*0.05; const ph = w*0.06;
   ctx.fillStyle = 'white'; ctx.strokeStyle = game.map.accent; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.moveTo(px, py - ph); ctx.lineTo(px - pw*0.6, py); ctx.lineTo(px + pw*0.6, py); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  // countdown overlay
+  if(countdown){
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = game.map.accent; ctx.font = `${Math.floor(w*0.2)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(countdown), w/2, h/2);
+  }
 }
 
 function loop(t){
@@ -362,12 +411,10 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 
-// Show initial menu
-menu.hidden = false; menuTitle.textContent = 'Tap Play to start';
-
 // Initialize counters
 pBest.textContent = state.meta.best;
-
+// Do NOT show menu by default; user must click Play
+menu.hidden = true;
 </script>
 </body>
 </html>

@@ -3,302 +3,273 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quest Bingo – LocalStorage Edition</title>
+  <title>AmFam Fit World — Level Quest (LocalStorage)</title>
   <style>
-    :root {
-      --bg: #0f172a;            /* slate-900 */
-      --card: #111827;          /* gray-900 */
-      --muted: #475569;         /* slate-600 */
-      --text: #e5e7eb;          /* gray-200 */
-      --accent: #22c55e;        /* green-500 */
-      --accent-2: #06b6d4;      /* cyan-500 */
-      --danger: #ef4444;        /* red-500 */
-      --warning: #f59e0b;       /* amber-500 */
-      --ring: rgba(34,197,94,.35);
+    :root{
+      /* American Family Fitness inspired palette (not official marks) */
+      --amfam-red:#e11d2b; 
+      --amfam-blue:#0054a6; 
+      --ink:#0f172a; 
+      --muted:#64748b; 
+      --paper:#f8fafc; 
+      --card:#ffffff; 
+      --track:#e2e8f0;
+      --ring:rgba(0,84,166,.25);
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      color: var(--text); background: radial-gradient(1200px 800px at 20% 10%, #111827 0, #0b1226 60%, #070d1d 100%);
-    }
-    .wrap { max-width: 960px; margin: 24px auto; padding: 16px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    h1 { font-size: clamp(1.25rem, 1.2rem + 1.2vw, 2rem); margin: 0; letter-spacing:.3px; }
-    .sub { color: var(--muted); font-size:.95rem; }
-    .controls { display:flex; gap:8px; flex-wrap:wrap; }
-    button, .btn {
-      appearance:none; border:1px solid #1f2937; background:#0b1222; color:var(--text);
-      padding:.6rem .85rem; border-radius:12px; cursor:pointer; font-weight:600; transition:.15s ease;
-    }
-    button:hover, .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,.35); border-color:#334155; }
-    .btn-accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #06110a; }
-    .btn-danger { background: linear-gradient(135deg, #ef4444, #f97316); border: none; color: #1b0a05; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:linear-gradient(180deg,#f0f4ff 0,#ffffff 40%)}
+    .wrap{max-width:980px;margin:20px auto;padding:16px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    h1{margin:0;font-size:clamp(1.3rem,1.1rem+1.5vw,2.1rem);font-weight:900;letter-spacing:.2px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .badge{background:linear-gradient(90deg,var(--amfam-blue),var(--amfam-red));color:#fff;padding:.25rem .6rem;border-radius:999px;font-weight:800;font-size:.85rem}
+    .sub{color:var(--muted)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button{appearance:none;border:2px solid var(--amfam-blue);background:#fff;color:var(--amfam-blue);padding:.6rem .85rem;border-radius:12px;cursor:pointer;font-weight:800;transition:.15s ease;box-shadow:0 2px 0 var(--amfam-blue)}
+    button:hover{transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--amfam-blue),#3b82f6);color:#fff;border:none;box-shadow:none}
+    .btn-reset{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border:none;box-shadow:none}
 
-    .grid {
-      margin-top:16px; display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;
-    }
-    .tile {
-      position:relative; border:1px solid #1f2937; border-radius:16px; padding:14px 12px 12px; background: linear-gradient(180deg, #0f172a, #0a1327);
-      min-height: 110px; display:flex; flex-direction:column; justify-content:space-between; outline:none;
-    }
-    .tile:focus { box-shadow: 0 0 0 3px var(--ring); }
-    .tile .title { font-size:.98rem; line-height:1.25rem; font-weight:600; }
-    .tile .meta { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:8px; }
-    .badge { font-size:.75rem; padding:.2rem .5rem; border-radius:999px; border:1px solid #1f2937; color:#cbd5e1; }
-    .stars { letter-spacing: 1px; color: var(--warning); font-size:.85rem; }
-    .points { color:#93c5fd; font-weight:700; font-variant-numeric: tabular-nums; }
+    .board{margin-top:14px;background:var(--paper);border:1px solid var(--track);border-radius:18px;padding:14px;box-shadow:0 12px 40px rgba(2,6,23,.08)}
 
-    .check {
-      position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:8px; border:1px solid #1f2937; display:grid; place-items:center;
-      background:#0b1222; font-weight:800; user-select:none;
-    }
-    .tile.done {
-      background: linear-gradient(180deg, #10201a, #0c1b16);
-      border-color: #14532d;
-    }
-    .tile.done .title { text-decoration: line-through; color:#a7f3d0; }
+    /* MAP */
+    .map{position:relative;aspect-ratio: 16/9;min-height:420px;border-radius:16px;background:radial-gradient(800px 300px at 20% 10%,#e8f0ff 0,#f5f7fb 50%,#ffffff 100%)}
+    .map .decor{position:absolute;inset:0;pointer-events:none}
+    .map svg#path{position:absolute;inset:0}
+    .node{position:absolute;translate:-50% -50%;width:120px;max-width:28vw}
+    .node card{display:block}
+    .card{background:var(--card);border:1px solid var(--track);border-radius:14px;padding:10px 10px 10px 12px;box-shadow:0 6px 18px rgba(2,6,23,.06);display:flex;gap:8px;align-items:flex-start}
+    .card h3{margin:0;font-size:.98rem}
+    .card p{margin:3px 0 8px 0;font-size:.85rem;color:var(--muted)}
+    .icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--amfam-blue),var(--amfam-red));display:grid;place-items:center;color:#fff;font-weight:900}
+    .meta{display:flex;gap:6px;align-items:center;font-size:.8rem}
+    .pill{border:1px solid var(--track);border-radius:999px;padding:.1rem .45rem;color:#0f172a;background:#f8fafc}
+    .start{position:absolute;left:6%;top:84%}
+    .n2{left:18%;top:62%}
+    .n3{left:33%;top:70%}
+    .n4{left:44%;top:54%}
+    .n5{left:58%;top:66%}
+    .n6{left:68%;top:48%}
+    .n7{left:78%;top:58%}
+    .n8{left:86%;top:42%}
+    .n9{left:68%;top:28%}
+    .n10{left:50%;top:18%}
 
-    .footer {
-      margin-top:16px; display:grid; grid-template-columns: 1fr; gap:10px;
-    }
-    .stats { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .progress {
-      --p: 0%; position:relative; height:12px; background:#0b1222; border:1px solid #1f2937; border-radius:999px; overflow:hidden; flex:1;
-    }
-    .progress > i { position:absolute; inset:0; width:var(--p); background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-    .stat { background:#0b1222; border:1px solid #1f2937; padding:.5rem .75rem; border-radius:12px; font-weight:700; }
+    .avatar{position:absolute;width:22px;height:22px;border:2px solid #fff;background:linear-gradient(135deg,var(--amfam-red),var(--amfam-blue));border-radius:50%;box-shadow:0 0 0 3px rgba(0,84,166,.25);transform:translate(-50%,-50%)}
 
-    .hint { color: var(--muted); font-size:.9rem; }
-    .board-note { color:#94a3b8; font-size:.85rem; margin-top:6px; }
+    /* Progress */
+    .stats{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 4px}
+    .stat{background:#fff;border:1px solid var(--track);padding:.5rem .75rem;border-radius:12px;font-weight:800}
+    .progress{--p:0%;position:relative;height:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;overflow:hidden;flex:1}
+    .progress>i{position:absolute;inset:0;width:var(--p);background:linear-gradient(90deg,var(--amfam-blue),var(--amfam-red))}
 
-    .row-bonus { display:flex; gap:6px; flex-wrap:wrap; }
-    .tag { border:1px dashed #334155; padding:.2rem .5rem; border-radius:999px; font-size:.75rem; color:#cbd5e1; }
+    /* State */
+    .node.locked{filter:grayscale(.9) opacity(.7)}
+    .node.completed .card{outline:2px solid #10b981}
+    .node .do{width:100%;margin-top:6px;border-radius:10px}
 
-    @media (max-width: 560px) {
-      .grid { gap:8px; }
-      .tile { min-height: 96px; }
-    }
+    /* Confetti (CSS only, lightweight) */
+    .confetti{position:absolute;inset:0;pointer-events:none}
+    .spark{position:absolute;width:6px;height:10px;border-radius:2px;animation:pop .8s ease-out forwards}
+    @keyframes pop{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),var(--dy)) rotate(200deg);opacity:0}}
+
+    .hint{color:var(--muted);font-size:.9rem}
   </style>
 </head>
 <body>
-  <div class="wrap" role="application" aria-label="Quest Bingo">
+  <div class="wrap" role="application" aria-label="AmFam Fit World">
     <header>
-      <div>
-        <h1>Quest Bingo</h1>
-        <div class="sub">Lightweight, gamified bingo with points & line bonuses. No backend — just LocalStorage.</div>
-        <div class="board-note">Customize the <code>CHALLENGES</code> array in the source. Replace the Google Form placeholders in <code>buildFormUrl()</code>.</div>
+      <div class="brand">
+        <h1>AmFam Fit World — Level Quest</h1>
+        <span class="badge">Virtual Gym</span>
       </div>
       <div class="controls" role="toolbar" aria-label="Controls">
-        <button id="btn-submit" class="btn btn-accent" title="Open prefilled form in a new tab">Submit to Club</button>
-        <button id="btn-reset" class="btn btn-danger" title="Reset local progress">Reset</button>
+        <button id="btn-submit" class="btn-primary" title="Open prefilled form in a new tab">Submit Progress</button>
+        <button id="btn-reset" class="btn-reset" title="Reset local progress">Reset</button>
       </div>
     </header>
+    <p class="sub">Progress through a virtual American Family Fitness–inspired world. Complete each level's challenge to unlock the next — no login, saved locally.</p>
 
-    <section class="footer">
+    <section class="board">
       <div class="stats" aria-live="polite">
-        <div class="stat">Score: <span id="score">0</span></div>
-        <div class="stat">Completed: <span id="completed">0</span>/25</div>
-        <div class="stat">Lines: <span id="lines">0</span></div>
-        <div class="progress" aria-label="Board completion">
-          <i id="bar"></i>
-        </div>
+        <div class="stat">Level: <span id="level">1</span>/<span id="levelMax">10</span></div>
+        <div class="stat">Completed: <span id="completed">0</span></div>
+        <div class="progress" aria-label="Quest completion"><i id="bar"></i></div>
       </div>
-      <div class="row-bonus" id="bonusTags"></div>
+      <div class="map" id="map">
+        <svg id="path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path id="trail" d="M5,90 C20,70 30,75 40,60 S60,55 70,40 85,35 92,45 78,30 68,18 50,12 45,10" fill="none" stroke="#8db3ff" stroke-width="1.5" stroke-dasharray="2 2" />
+        </svg>
+        <div class="avatar" id="avatar" title="Your marker"></div>
+
+        <!-- Level nodes -->
+        <div class="node start" data-i="0">
+          <div class="card">
+            <div class="icon">🏁</div>
+            <div>
+              <h3>Level 1 — Check In</h3>
+              <p>Visit the club or check in on the app.</p>
+              <div class="meta"><span class="pill">Facility</span><span class="pill">Warmup</span></div>
+              <button class="do">Complete</button>
+            </div>
+          </div>
+        </div>
+        <div class="node n2" data-i="1">
+          <div class="card"><div class="icon">🏋️</div><div><h3>Level 2 — Strength</h3><p>Do a basic strength session (20 min).</p><div class="meta"><span class="pill">Weights</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n3" data-i="2">
+          <div class="card"><div class="icon">🚴</div><div><h3>Level 3 — Cardio</h3><p>Cycle, run, or row for 15 min.</p><div class="meta"><span class="pill">Cardio</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n4" data-i="3">
+          <div class="card"><div class="icon">💧</div><div><h3>Level 4 — Hydrate</h3><p>Drink 2 bottles of water today.</p><div class="meta"><span class="pill">Health</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n5" data-i="4">
+          <div class="card"><div class="icon">🤸</div><div><h3>Level 5 — Mobility</h3><p>Stretch or foam roll 10 min.</p><div class="meta"><span class="pill">Recovery</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n6" data-i="5">
+          <div class="card"><div class="icon">👥</div><div><h3>Level 6 — Group Fitness</h3><p>Attend a class (e.g., HIIT, Yoga).</p><div class="meta"><span class="pill">Community</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n7" data-i="6">
+          <div class="card"><div class="icon">🏊</div><div><h3>Level 7 — Pool</h3><p>Swim or water-walk 10 lengths.</p><div class="meta"><span class="pill">Aquatics</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n8" data-i="7">
+          <div class="card"><div class="icon">🎮</div><div><h3>Level 8 — Virtuagym</h3><p>Complete 1 guided in‑app workout.</p><div class="meta"><span class="pill">App</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n9" data-i="8">
+          <div class="card"><div class="icon">🥗</div><div><h3>Level 9 — Fuel</h3><p>Log a balanced meal today.</p><div class="meta"><span class="pill">Nutrition</span></div><button class="do">Complete</button></div></div>
+        </div>
+        <div class="node n10" data-i="9">
+          <div class="card"><div class="icon">🏆</div><div><h3>Level 10 — Finale</h3><p>Share your success photo or check‑in.</p><div class="meta"><span class="pill">Celebrate</span></div><button class="do">Complete</button></div></div>
+        </div>
+
+        <div class="confetti" id="confetti"></div>
+      </div>
+      <p class="hint">Tip: Levels unlock sequentially. Your progress is saved on this device only (localStorage). “Submit Progress” can prefill a Google Form for the club.</p>
     </section>
-
-    <main class="grid" id="grid" aria-label="Bingo Grid" role="grid"></main>
-
-    <p class="hint">Tip: Tap tiles to toggle completion. Points vary by difficulty (★/★★/★★★). Completing a full line adds a bonus. Progress is saved on this device.</p>
   </div>
 
 <script>
-// ======== CONFIG ========
-const BOARD_KEY = 'questBingo.v1';
-const FORM_BASE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform'; // TODO: replace
-const ENTRY_MAP = {
-  checked: 'entry.123456', // array of checked indexes
-  score:   'entry.123457',
-  lines:   'entry.123458',
-  player:  'entry.123459'  // optional short name prompt
-};
+// ========== CONFIG ==========
+const BOARD_KEY = 'amfam.fitworld.levels.v1';
+const FORM_BASE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform'; // TODO replace
+const ENTRY_MAP = { level:'entry.100', completed:'entry.101', name:'entry.102' };
 
-// Define 25 challenges (text + difficulty 1..3). Edit freely for each client.
-const CHALLENGES = [
-  { text: 'Attend a class', diff: 1 },
-  { text: 'Share a photo', diff: 1 },
-  { text: 'Invite a friend', diff: 2 },
-  { text: 'Try a new activity', diff: 2 },
-  { text: 'Hit 8k steps', diff: 1 },
-  { text: 'Drink 2L water', diff: 1 },
-  { text: 'Coach’s choice', diff: 3 },
-  { text: 'Stretch 10 min', diff: 1 },
-  { text: 'Volunteer shift', diff: 3 },
-  { text: 'Post a tip', diff: 2 },
-  { text: 'Core workout', diff: 2 },
-  { text: 'Healthy recipe', diff: 1 },
-  { text: 'Team photo', diff: 2 },
-  { text: 'Try a class type', diff: 2 },
-  { text: 'Park workout', diff: 2 },
-  { text: 'Mentor someone', diff: 3 },
-  { text: 'New PR attempt', diff: 3 },
-  { text: 'Hydration streak', diff: 2 },
-  { text: 'Morning warmup', diff: 1 },
-  { text: 'Log 20 mins', diff: 1 },
-  { text: 'Community post', diff: 1 },
-  { text: 'Buddy challenge', diff: 2 },
-  { text: 'Mobility session', diff: 2 },
-  { text: 'Mindfulness 5m', diff: 1 },
-  { text: 'Attend event', diff: 3 }
+const LEVELS = [
+  { title:'Level 1 — Check In', blurb:'Visit the club or check in on the app.', tags:['Facility','Warmup'], key:'checkin'},
+  { title:'Level 2 — Strength', blurb:'Do a basic strength session (20 min).', tags:['Weights'], key:'strength'},
+  { title:'Level 3 — Cardio', blurb:'Cycle, run, or row for 15 min.', tags:['Cardio'], key:'cardio'},
+  { title:'Level 4 — Hydrate', blurb:'Drink 2 bottles of water today.', tags:['Health'], key:'hydration'},
+  { title:'Level 5 — Mobility', blurb:'Stretch or foam roll 10 min.', tags:['Recovery'], key:'mobility'},
+  { title:'Level 6 — Group Fitness', blurb:'Attend a class (e.g., HIIT, Yoga).', tags:['Community'], key:'class'},
+  { title:'Level 7 — Pool', blurb:'Swim or water-walk 10 lengths.', tags:['Aquatics'], key:'pool'},
+  { title:'Level 8 — Virtuagym', blurb:'Complete 1 guided in‑app workout.', tags:['App'], key:'virtuagym'},
+  { title:'Level 9 — Fuel', blurb:'Log a balanced meal today.', tags:['Nutrition'], key:'nutrition'},
+  { title:'Level 10 — Finale', blurb:'Share your success photo or check‑in.', tags:['Celebrate'], key:'finale'}
 ];
 
-// Scoring: base per difficulty
-const POINTS = { 1: 5, 2: 12, 3: 20 };
-const LINE_BONUS = 30; // bonus points per completed line (row/col/diag)
-
-// ======== STATE ========
-const defaultState = () => ({
-  checked: Array(25).fill(false),
-  score: 0,
-  lines: [], // store canonical line ids that are completed
-});
-
-function load() {
-  try { return JSON.parse(localStorage.getItem(BOARD_KEY)) ?? defaultState(); }
-  catch { return defaultState(); }
-}
-function save(s) { localStorage.setItem(BOARD_KEY, JSON.stringify(s)); }
-
+// ========== STATE ==========
+const defaultState = () => ({ idx:0, // highest unlocked index (0-based)
+  completed: Array(LEVELS.length).fill(false), name: localStorage.getItem('fitworld.name') || '' });
+function load(){ try { return JSON.parse(localStorage.getItem(BOARD_KEY)) ?? defaultState(); } catch { return defaultState(); } }
+function save(s){ localStorage.setItem(BOARD_KEY, JSON.stringify(s)); }
 let state = load();
 
-// ======== DOM HELPERS ========
-const $ = sel => document.querySelector(sel);
-const grid = $('#grid');
-const scoreEl = $('#score');
+// ========== DOM ==========
+const $ = (s)=>document.querySelector(s);
+const nodes = [...document.querySelectorAll('.node')];
+const levelEl = $('#level');
+const levelMaxEl = $('#levelMax');
 const completedEl = $('#completed');
-const linesEl = $('#lines');
 const barEl = $('#bar');
-const bonusTags = $('#bonusTags');
+const avatar = $('#avatar');
+const trail = document.getElementById('trail');
+const confetti = $('#confetti');
+levelMaxEl.textContent = LEVELS.length;
 
-// Precompute all 12 bingo lines: 5 rows + 5 cols + 2 diags
-const LINES = (() => {
-  const lines = [];
-  // rows
-  for (let r = 0; r < 5; r++) lines.push(Array.from({length:5}, (_,c)=> r*5+c));
-  // cols
-  for (let c = 0; c < 5; c++) lines.push(Array.from({length:5}, (_,r)=> r*5+c));
-  // diags
-  lines.push([0,6,12,18,24]);
-  lines.push([4,8,12,16,20]);
-  return lines;
-})();
+// ========== RENDER ==========
+function render(){
+  // lock/unlock nodes
+  nodes.forEach(n => n.classList.add('locked'));
+  for(let i=0;i<=state.idx;i++){ nodes[i]?.classList.remove('locked'); }
+  // completed state
+  nodes.forEach((n,i)=> n.classList.toggle('completed', !!state.completed[i]));
 
-function stars(n){ return '★'.repeat(n); }
-
-function render() {
-  grid.innerHTML = '';
-  CHALLENGES.forEach((ch, i) => {
-    const tile = document.createElement('button');
-    tile.className = 'tile' + (state.checked[i] ? ' done' : '');
-    tile.setAttribute('role','gridcell');
-    tile.setAttribute('aria-pressed', state.checked[i] ? 'true' : 'false');
-    tile.setAttribute('data-i', i);
-    tile.innerHTML = `
-      <div class="check" aria-hidden="true">${state.checked[i] ? '✓' : ''}</div>
-      <div class="title">${ch.text}</div>
-      <div class="meta">
-        <span class="badge stars" title="Difficulty">${stars(ch.diff)}</span>
-        <span class="points" title="Points">+${POINTS[ch.diff]}</span>
-      </div>
-    `;
-    tile.addEventListener('click', onToggle);
-    tile.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') onToggle(e); });
-    grid.appendChild(tile);
+  // wire buttons
+  nodes.forEach((n,i)=>{
+    const btn = n.querySelector('.do');
+    btn.disabled = i>state.idx || state.completed[i];
+    btn.textContent = state.completed[i] ? 'Completed' : (i>state.idx ? 'Locked' : 'Complete');
+    btn.onclick = ()=> completeLevel(i);
   });
-  updateStats();
+
+  const doneCount = state.completed.filter(Boolean).length;
+  completedEl.textContent = doneCount;
+  levelEl.textContent = Math.min(doneCount+1, LEVELS.length);
+  barEl.style.setProperty('--p', `${Math.round((doneCount/LEVELS.length)*100)}%`);
+
+  moveAvatar();
 }
 
-function onToggle(e){
-  const i = +e.currentTarget.getAttribute('data-i');
-  state.checked[i] = !state.checked[i];
-  recompute();
+function moveAvatar(){
+  const done = state.completed.filter(Boolean).length;
+  const t = Math.max(0, Math.min(1, done/LEVELS.length));
+  const len = trail.getTotalLength();
+  const pt = trail.getPointAtLength(len * t);
+  const svg = document.getElementById('path');
+  const r = svg.getBoundingClientRect();
+  avatar.style.left = (pt.x/100 * r.width) + 'px';
+  avatar.style.top  = (pt.y/100 * r.height) + 'px';
+}
+
+function burstConfetti(x,y){
+  for(let i=0;i<24;i++){
+    const s = document.createElement('div');
+    s.className='spark';
+    s.style.left = x+'px'; s.style.top = y+'px';
+    s.style.background = i%2? 'var(--amfam-blue)' : 'var(--amfam-red)';
+    const dx = (Math.random()*160-80)+'px';
+    const dy = (Math.random()*-160)+'px';
+    s.style.setProperty('--dx', dx); s.style.setProperty('--dy', dy);
+    confetti.appendChild(s);
+    setTimeout(()=> s.remove(), 900);
+  }
+}
+
+function completeLevel(i){
+  if(i>state.idx) return; // locked
+  if(state.completed[i]) return; // already
+  state.completed[i] = true;
+  // unlock next
+  if(state.idx < LEVELS.length-1) state.idx = Math.max(state.idx, i+1);
   save(state);
   render();
+  // celebrate at the node's position
+  const rect = nodes[i].getBoundingClientRect();
+  const parent = document.getElementById('map').getBoundingClientRect();
+  burstConfetti(rect.left-parent.left+60, rect.top-parent.top+20);
 }
 
-function recompute(){
-  // score from tiles
-  let score = 0;
-  state.checked.forEach((v,i)=>{ if(v) score += POINTS[CHALLENGES[i].diff]; });
-
-  // determine completed lines
-  const completedLines = [];
-  LINES.forEach((line, idx)=>{
-    if (line.every(i => state.checked[i])) completedLines.push(idx);
-  });
-
-  // add line bonus (each unique line once)
-  score += completedLines.length * LINE_BONUS;
-
-  state.score = score;
-  state.lines = completedLines;
-}
-
-function updateStats(){
-  scoreEl.textContent = state.score;
-  const completedCount = state.checked.filter(Boolean).length;
-  completedEl.textContent = completedCount;
-  linesEl.textContent = state.lines.length;
-  barEl.style.setProperty('--p', `${Math.round((completedCount/25)*100)}%`);
-
-  // tags for which lines are complete
-  bonusTags.innerHTML = '';
-  state.lines.forEach(id=>{
-    const tag = document.createElement('span');
-    const label = lineLabel(id);
-    tag.className = 'tag';
-    tag.textContent = `Line bonus: ${label}`;
-    bonusTags.appendChild(tag);
-  });
-}
-
-function lineLabel(id){
-  if (id < 5) return `Row ${id+1}`;
-  if (id < 10) return `Col ${id-4}`;
-  return id === 10 ? 'Diag ↘' : 'Diag ↙';
-}
-
-// ======== SUBMIT ========
+// Submit (optional Google Form)
 function buildFormUrl(){
   const params = new URLSearchParams();
-  const checkedIdx = state.checked.map((v,i)=> v? i : null).filter(v=>v!==null);
-  params.set(ENTRY_MAP.checked, JSON.stringify(checkedIdx));
-  params.set(ENTRY_MAP.score, String(state.score));
-  params.set(ENTRY_MAP.lines, String(state.lines.length));
-  // Optional short prompt for player name. The Form can make this required.
-  const who = prompt('Enter your name or member ID (optional):', localStorage.getItem('questBingo.name') || '');
-  if (who !== null) {
-    localStorage.setItem('questBingo.name', who);
-    params.set(ENTRY_MAP.player, who);
-  }
+  params.set(ENTRY_MAP.level, String(state.idx+1));
+  params.set(ENTRY_MAP.completed, state.completed.map(v=>v?1:0).join(','));
+  const who = prompt('Enter your name or member ID (optional):', state.name || '');
+  if(who!==null){ state.name = who; localStorage.setItem('fitworld.name', who); save(state); params.set(ENTRY_MAP.name, who); }
   return `${FORM_BASE}?${params.toString()}`;
 }
 
-$('#btn-submit').addEventListener('click', () => {
-  const url = buildFormUrl();
-  window.open(url, '_blank', 'noopener');
+document.getElementById('btn-submit').addEventListener('click', ()=>{
+  const url = buildFormUrl(); window.open(url,'_blank','noopener');
 });
 
-$('#btn-reset').addEventListener('click', () => {
-  if (confirm('Reset local progress? This will only affect this device.')) {
-    state = defaultState();
-    save(state);
-    render();
-  }
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  if(confirm('Reset local progress? This only affects this device.')){ state = defaultState(); save(state); render(); }
 });
 
-// ======== INIT ========
-recompute();
+// ========== INIT ==========
 render();
+window.addEventListener('resize', moveAvatar);
 </script>
 </body>
 </html>

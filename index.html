@@ -6,18 +6,10 @@
   <title>AmFam Fit World — Level Quest (LocalStorage)</title>
   <style>
     :root{
-      /* American Family Fitness inspired palette (not official marks) */
-      --amfam-red:#e11d2b; 
-      --amfam-blue:#0054a6; 
-      --ink:#0f172a; 
-      --muted:#64748b; 
-      --paper:#f8fafc; 
-      --card:#ffffff; 
-      --track:#e2e8f0;
-      --ring:rgba(0,84,166,.25);
+      --amfam-red:#e11d2b; --amfam-blue:#0054a6; --ink:#0f172a; --muted:#64748b; --paper:#f8fafc; --card:#ffffff; --track:#e2e8f0; --ring:rgba(0,84,166,.25);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:linear-gradient(180deg,#f0f4ff 0,#ffffff 40%)}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:linear-gradient(180deg,#eef4ff 0,#ffffff 40%)}
     .wrap{max-width:980px;margin:20px auto;padding:16px}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
     h1{margin:0;font-size:clamp(1.3rem,1.1rem+1.5vw,2.1rem);font-weight:900;letter-spacing:.2px}
@@ -32,46 +24,32 @@
 
     .board{margin-top:14px;background:var(--paper);border:1px solid var(--track);border-radius:18px;padding:14px;box-shadow:0 12px 40px rgba(2,6,23,.08)}
 
-    /* MAP */
-    .map{position:relative;aspect-ratio: 16/9;min-height:420px;border-radius:16px;background:radial-gradient(800px 300px at 20% 10%,#e8f0ff 0,#f5f7fb 50%,#ffffff 100%)}
-    .map .decor{position:absolute;inset:0;pointer-events:none}
-    .map svg#path{position:absolute;inset:0}
-    .node{position:absolute;translate:-50% -50%;width:120px;max-width:28vw}
-    .node card{display:block}
-    .card{background:var(--card);border:1px solid var(--track);border-radius:14px;padding:10px 10px 10px 12px;box-shadow:0 6px 18px rgba(2,6,23,.06);display:flex;gap:8px;align-items:flex-start}
-    .card h3{margin:0;font-size:.98rem}
-    .card p{margin:3px 0 8px 0;font-size:.85rem;color:var(--muted)}
-    .icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--amfam-blue),var(--amfam-red));display:grid;place-items:center;color:#fff;font-weight:900}
-    .meta{display:flex;gap:6px;align-items:center;font-size:.8rem}
+    /* IMMERSIVE WORLD */
+    .world{position:relative; height:460px; overflow:hidden; border-radius:16px; border:1px solid var(--track); background:#cfe6ff}
+    .layer{position:absolute; inset:0; image-rendering:crisp-edges; will-change:transform;}
+    .sky{background:linear-gradient(180deg,#cfe6ff,#eaf3ff)}
+    .bg-hills{background:repeating-linear-gradient( -20deg, #b7d0ff 0 40px, #a7c6ff 40px 80px ); opacity:.6}
+    .mid-buildings{background:repeating-linear-gradient( 90deg, #9cc3ff 0 140px, #91b8f7 140px 280px ); clip-path:polygon(0 65%,100% 55%,100% 100%,0 100%)}
+    .floor{background:linear-gradient(180deg,#9ee57c,#70d060 60%,#58b64a); clip-path:polygon(0 72%,100% 68%,100% 100%,0 100%)}
+
+    .track{position:absolute; left:0; top:72%; height:4px; width:3000px; background:repeating-linear-gradient(90deg,#084 0 24px,#0a5 24px 48px); box-shadow:0 2px 0 rgba(0,0,0,.15)}
+    .gate{position:absolute; top:56%; transform:translateY(-50%); width:200px}
+    .gate .card{background:var(--card);border:1px solid var(--track);border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
+    .gate h3{margin:0 0 4px 0; font-size:1rem}
+    .gate p{margin:0 0 6px 0; font-size:.9rem; color:var(--muted)}
+    .gate .meta{display:flex;gap:6px;align-items:center;font-size:.8rem;margin-bottom:6px}
     .pill{border:1px solid var(--track);border-radius:999px;padding:.1rem .45rem;color:#0f172a;background:#f8fafc}
-    .start{position:absolute;left:6%;top:84%}
-    .n2{left:18%;top:62%}
-    .n3{left:33%;top:70%}
-    .n4{left:44%;top:54%}
-    .n5{left:58%;top:66%}
-    .n6{left:68%;top:48%}
-    .n7{left:78%;top:58%}
-    .n8{left:86%;top:42%}
-    .n9{left:68%;top:28%}
-    .n10{left:50%;top:18%}
+    .gate.locked{filter:grayscale(.8) opacity(.75)}
+    .gate.completed .card{outline:2px solid #10b981}
 
-    .avatar{position:absolute;width:22px;height:22px;border:2px solid #fff;background:linear-gradient(135deg,var(--amfam-red),var(--amfam-blue));border-radius:50%;box-shadow:0 0 0 3px rgba(0,84,166,.25);transform:translate(-50%,-50%)}
+    .avatar{position:absolute; top:72%; left:40px; width:28px; height:28px; border:2px solid #fff; background:linear-gradient(135deg,var(--amfam-red),var(--amfam-blue)); border-radius:50%; box-shadow:0 0 0 3px rgba(0,84,166,.25); transform:translate(-50%,-50%)}
 
-    /* Progress */
+    .hud{position:absolute; inset:auto 12px 12px auto; display:flex; gap:8px}
+    .stat{background:#fff;border:1px solid var(--track);padding:.4rem .6rem;border-radius:10px;font-weight:800}
+
     .stats{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 4px}
-    .stat{background:#fff;border:1px solid var(--track);padding:.5rem .75rem;border-radius:12px;font-weight:800}
     .progress{--p:0%;position:relative;height:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;overflow:hidden;flex:1}
     .progress>i{position:absolute;inset:0;width:var(--p);background:linear-gradient(90deg,var(--amfam-blue),var(--amfam-red))}
-
-    /* State */
-    .node.locked{filter:grayscale(.9) opacity(.7)}
-    .node.completed .card{outline:2px solid #10b981}
-    .node .do{width:100%;margin-top:6px;border-radius:10px}
-
-    /* Confetti (CSS only, lightweight) */
-    .confetti{position:absolute;inset:0;pointer-events:none}
-    .spark{position:absolute;width:6px;height:10px;border-radius:2px;animation:pop .8s ease-out forwards}
-    @keyframes pop{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),var(--dy)) rotate(200deg);opacity:0}}
 
     .hint{color:var(--muted);font-size:.9rem}
   </style>
@@ -96,160 +74,148 @@
         <div class="stat">Completed: <span id="completed">0</span></div>
         <div class="progress" aria-label="Quest completion"><i id="bar"></i></div>
       </div>
-      <div class="map" id="map">
-        <svg id="path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path id="trail" d="M5,90 C20,70 30,75 40,60 S60,55 70,40 85,35 92,45 78,30 68,18 50,12 45,10" fill="none" stroke="#8db3ff" stroke-width="1.5" stroke-dasharray="2 2" />
-        </svg>
+      <div class="world" id="world" aria-label="AmFam Fit World">
+        <div class="layer sky" data-speed="0.1"></div>
+        <div class="layer bg-hills" data-speed="0.2"></div>
+        <div class="layer mid-buildings" data-speed="0.35"></div>
+        <div class="layer floor" data-speed="0.55"></div>
+        <div class="track" id="track"></div>
+
+        <!-- Gates (levels) placed along the track -->
+        <div class="gate" style="left:120px" data-i="0">
+          <div class="card"><h3>Level 1 — Check In</h3><p>Visit the club or check in on the app.</p><div class="meta"><span class="pill">Facility</span><span class="pill">Warmup</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:420px" data-i="1">
+          <div class="card"><h3>Level 2 — Strength</h3><p>Do a basic strength session (20 min).</p><div class="meta"><span class="pill">Weights</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:780px" data-i="2">
+          <div class="card"><h3>Level 3 — Cardio</h3><p>Cycle, run, or row for 15 min.</p><div class="meta"><span class="pill">Cardio</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:1160px" data-i="3">
+          <div class="card"><h3>Level 4 — Hydrate</h3><p>Drink 2 bottles of water today.</p><div class="meta"><span class="pill">Health</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:1520px" data-i="4">
+          <div class="card"><h3>Level 5 — Mobility</h3><p>Stretch or foam roll 10 min.</p><div class="meta"><span class="pill">Recovery</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:1860px" data-i="5">
+          <div class="card"><h3>Level 6 — Group Fitness</h3><p>Attend a class (e.g., HIIT, Yoga).</p><div class="meta"><span class="pill">Community</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:2140px" data-i="6">
+          <div class="card"><h3>Level 7 — Pool</h3><p>Swim or water-walk 10 lengths.</p><div class="meta"><span class="pill">Aquatics</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:2380px" data-i="7">
+          <div class="card"><h3>Level 8 — Virtuagym</h3><p>Complete 1 guided in‑app workout.</p><div class="meta"><span class="pill">App</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:2620px" data-i="8">
+          <div class="card"><h3>Level 9 — Fuel</h3><p>Log a balanced meal today.</p><div class="meta"><span class="pill">Nutrition</span></div><button class="do">Complete</button></div>
+        </div>
+        <div class="gate" style="left:2860px" data-i="9">
+          <div class="card"><h3>Level 10 — Finale</h3><p>Share your success photo or check‑in.</p><div class="meta"><span class="pill">Celebrate</span></div><button class="do">Complete</button></div>
+        </div>
+
         <div class="avatar" id="avatar" title="Your marker"></div>
-
-        <!-- Level nodes -->
-        <div class="node start" data-i="0">
-          <div class="card">
-            <div class="icon">🏁</div>
-            <div>
-              <h3>Level 1 — Check In</h3>
-              <p>Visit the club or check in on the app.</p>
-              <div class="meta"><span class="pill">Facility</span><span class="pill">Warmup</span></div>
-              <button class="do">Complete</button>
-            </div>
-          </div>
+        <div class="hud">
+          <div class="stat">Use ◀ ▶ or drag</div>
         </div>
-        <div class="node n2" data-i="1">
-          <div class="card"><div class="icon">🏋️</div><div><h3>Level 2 — Strength</h3><p>Do a basic strength session (20 min).</p><div class="meta"><span class="pill">Weights</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n3" data-i="2">
-          <div class="card"><div class="icon">🚴</div><div><h3>Level 3 — Cardio</h3><p>Cycle, run, or row for 15 min.</p><div class="meta"><span class="pill">Cardio</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n4" data-i="3">
-          <div class="card"><div class="icon">💧</div><div><h3>Level 4 — Hydrate</h3><p>Drink 2 bottles of water today.</p><div class="meta"><span class="pill">Health</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n5" data-i="4">
-          <div class="card"><div class="icon">🤸</div><div><h3>Level 5 — Mobility</h3><p>Stretch or foam roll 10 min.</p><div class="meta"><span class="pill">Recovery</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n6" data-i="5">
-          <div class="card"><div class="icon">👥</div><div><h3>Level 6 — Group Fitness</h3><p>Attend a class (e.g., HIIT, Yoga).</p><div class="meta"><span class="pill">Community</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n7" data-i="6">
-          <div class="card"><div class="icon">🏊</div><div><h3>Level 7 — Pool</h3><p>Swim or water-walk 10 lengths.</p><div class="meta"><span class="pill">Aquatics</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n8" data-i="7">
-          <div class="card"><div class="icon">🎮</div><div><h3>Level 8 — Virtuagym</h3><p>Complete 1 guided in‑app workout.</p><div class="meta"><span class="pill">App</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n9" data-i="8">
-          <div class="card"><div class="icon">🥗</div><div><h3>Level 9 — Fuel</h3><p>Log a balanced meal today.</p><div class="meta"><span class="pill">Nutrition</span></div><button class="do">Complete</button></div></div>
-        </div>
-        <div class="node n10" data-i="9">
-          <div class="card"><div class="icon">🏆</div><div><h3>Level 10 — Finale</h3><p>Share your success photo or check‑in.</p><div class="meta"><span class="pill">Celebrate</span></div><button class="do">Complete</button></div></div>
-        </div>
-
-        <div class="confetti" id="confetti"></div>
       </div>
-      <p class="hint">Tip: Levels unlock sequentially. Your progress is saved on this device only (localStorage). “Submit Progress” can prefill a Google Form for the club.</p>
+      <p class="hint">Immersive mode: side‑scroll through the AmFam world. Complete each gate to unlock the next. All progress is stored in localStorage.</p>>Tip: Levels unlock sequentially. Your progress is saved on this device only (localStorage). “Submit Progress” can prefill a Google Form for the club.</p>
     </section>
   </div>
 
 <script>
-// ========== CONFIG ==========
-const BOARD_KEY = 'amfam.fitworld.levels.v1';
-const FORM_BASE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform'; // TODO replace
+// ===== CONFIG
+const BOARD_KEY = 'amfam.fitworld.immersive.v1';
+const FORM_BASE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform';
 const ENTRY_MAP = { level:'entry.100', completed:'entry.101', name:'entry.102' };
+const LEVELS = 10; // number of gates
 
-const LEVELS = [
-  { title:'Level 1 — Check In', blurb:'Visit the club or check in on the app.', tags:['Facility','Warmup'], key:'checkin'},
-  { title:'Level 2 — Strength', blurb:'Do a basic strength session (20 min).', tags:['Weights'], key:'strength'},
-  { title:'Level 3 — Cardio', blurb:'Cycle, run, or row for 15 min.', tags:['Cardio'], key:'cardio'},
-  { title:'Level 4 — Hydrate', blurb:'Drink 2 bottles of water today.', tags:['Health'], key:'hydration'},
-  { title:'Level 5 — Mobility', blurb:'Stretch or foam roll 10 min.', tags:['Recovery'], key:'mobility'},
-  { title:'Level 6 — Group Fitness', blurb:'Attend a class (e.g., HIIT, Yoga).', tags:['Community'], key:'class'},
-  { title:'Level 7 — Pool', blurb:'Swim or water-walk 10 lengths.', tags:['Aquatics'], key:'pool'},
-  { title:'Level 8 — Virtuagym', blurb:'Complete 1 guided in‑app workout.', tags:['App'], key:'virtuagym'},
-  { title:'Level 9 — Fuel', blurb:'Log a balanced meal today.', tags:['Nutrition'], key:'nutrition'},
-  { title:'Level 10 — Finale', blurb:'Share your success photo or check‑in.', tags:['Celebrate'], key:'finale'}
-];
-
-// ========== STATE ==========
-const defaultState = () => ({ idx:0, // highest unlocked index (0-based)
-  completed: Array(LEVELS.length).fill(false), name: localStorage.getItem('fitworld.name') || '' });
+// ===== STATE
+const defaultState = ()=>({ idx:0, completed: Array(LEVELS).fill(false), name: localStorage.getItem('fitworld.name') || '', x: 60 });
 function load(){ try { return JSON.parse(localStorage.getItem(BOARD_KEY)) ?? defaultState(); } catch { return defaultState(); } }
 function save(s){ localStorage.setItem(BOARD_KEY, JSON.stringify(s)); }
 let state = load();
 
-// ========== DOM ==========
+// ===== DOM
 const $ = (s)=>document.querySelector(s);
-const nodes = [...document.querySelectorAll('.node')];
-const levelEl = $('#level');
-const levelMaxEl = $('#levelMax');
-const completedEl = $('#completed');
-const barEl = $('#bar');
+const world = $('#world');
+const layers = [...document.querySelectorAll('.layer')];
 const avatar = $('#avatar');
-const trail = document.getElementById('trail');
-const confetti = $('#confetti');
-levelMaxEl.textContent = LEVELS.length;
+const gates = [...document.querySelectorAll('.gate')];
+const barEl = $('#bar');
+const completedEl = $('#completed');
+const levelEl = $('#level'); const levelMaxEl = $('#levelMax'); levelMaxEl && (levelMaxEl.textContent = LEVELS);
 
-// ========== RENDER ==========
+// HUD stats (reuse from earlier section if present)
+if(!levelEl || !completedEl){
+  const stats = document.createElement('div'); stats.className='stats'; stats.innerHTML = `<div class="stat">Level: <span id="level">1</span>/${LEVELS}</div><div class="stat">Completed: <span id="completed">0</span></div><div class="progress"><i id="bar"></i></div>`; world.before(stats);
+}
+
+// ===== RENDER
 function render(){
-  // lock/unlock nodes
-  nodes.forEach(n => n.classList.add('locked'));
-  for(let i=0;i<=state.idx;i++){ nodes[i]?.classList.remove('locked'); }
-  // completed state
-  nodes.forEach((n,i)=> n.classList.toggle('completed', !!state.completed[i]));
+  // Lock/unlock
+  gates.forEach(g=> g.classList.add('locked'));
+  for(let i=0;i<=state.idx;i++){ gates[i]?.classList.remove('locked'); }
+  gates.forEach((g,i)=> g.classList.toggle('completed', !!state.completed[i]));
 
-  // wire buttons
-  nodes.forEach((n,i)=>{
-    const btn = n.querySelector('.do');
+  // Buttons
+  gates.forEach((g,i)=>{
+    const btn = g.querySelector('.do');
     btn.disabled = i>state.idx || state.completed[i];
     btn.textContent = state.completed[i] ? 'Completed' : (i>state.idx ? 'Locked' : 'Complete');
     btn.onclick = ()=> completeLevel(i);
   });
 
-  const doneCount = state.completed.filter(Boolean).length;
-  completedEl.textContent = doneCount;
-  levelEl.textContent = Math.min(doneCount+1, LEVELS.length);
-  barEl.style.setProperty('--p', `${Math.round((doneCount/LEVELS.length)*100)}%`);
-
-  moveAvatar();
-}
-
-function moveAvatar(){
+  // Progress
   const done = state.completed.filter(Boolean).length;
-  const t = Math.max(0, Math.min(1, done/LEVELS.length));
-  const len = trail.getTotalLength();
-  const pt = trail.getPointAtLength(len * t);
-  const svg = document.getElementById('path');
-  const r = svg.getBoundingClientRect();
-  avatar.style.left = (pt.x/100 * r.width) + 'px';
-  avatar.style.top  = (pt.y/100 * r.height) + 'px';
+  const level = Math.min(done+1, LEVELS);
+  (document.getElementById('completed')||{}).textContent = done;
+  (document.getElementById('level')||{}).textContent = level;
+  (document.getElementById('bar')||{}).style?.setProperty('--p', `${Math.round((done/LEVELS)*100)}%`);
+
+  updateCamera();
 }
 
-function burstConfetti(x,y){
-  for(let i=0;i<24;i++){
-    const s = document.createElement('div');
-    s.className='spark';
-    s.style.left = x+'px'; s.style.top = y+'px';
-    s.style.background = i%2? 'var(--amfam-blue)' : 'var(--amfam-red)';
-    const dx = (Math.random()*160-80)+'px';
-    const dy = (Math.random()*-160)+'px';
-    s.style.setProperty('--dx', dx); s.style.setProperty('--dy', dy);
-    confetti.appendChild(s);
-    setTimeout(()=> s.remove(), 900);
-  }
+// ===== MOVEMENT (arrow keys + drag)
+let dragging = false, dragStartX = 0, startX = 0;
+world.addEventListener('pointerdown', e=>{ dragging=true; dragStartX=e.clientX; startX = state.x; world.setPointerCapture(e.pointerId); });
+world.addEventListener('pointermove', e=>{ if(!dragging) return; const dx = e.clientX - dragStartX; state.x = Math.max(0, Math.min(2940, startX + dx)); updateCamera(); });
+world.addEventListener('pointerup', ()=> dragging=false);
+world.addEventListener('pointercancel', ()=> dragging=false);
+
+window.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight') { state.x = Math.min(2940, state.x + 24); updateCamera(); }
+  if(e.key==='ArrowLeft')  { state.x = Math.max(0, state.x - 24); updateCamera(); }
+});
+
+function updateCamera(){
+  // Parallax: move layers at different speeds opposite to avatar X
+  const cam = Math.max(0, Math.min(2600, state.x - world.clientWidth*0.5));
+  layers.forEach(l=>{
+    const sp = parseFloat(l.dataset.speed||'0.2');
+    l.style.transform = `translateX(${-cam*sp}px)`;
+  });
+  // Move gates and track relative to camera (they are inside world, positioned absolute by left)
+  const offset = -cam; gates.forEach(g=> g.style.transform = `translateX(${offset}px)`);
+  document.getElementById('track').style.transform = `translateX(${offset}px)`;
+
+  // Avatar follows ground and stays near center
+  avatar.style.left = (world.clientWidth*0.5)+'px';
+
+  // Save position
+  save(state);
 }
 
+// ===== COMPLETION
 function completeLevel(i){
   if(i>state.idx) return; // locked
-  if(state.completed[i]) return; // already
+  if(state.completed[i]) return;
   state.completed[i] = true;
-  // unlock next
-  if(state.idx < LEVELS.length-1) state.idx = Math.max(state.idx, i+1);
+  if(state.idx < LEVELS-1) state.idx = Math.max(state.idx, i+1);
   save(state);
   render();
-  // celebrate at the node's position
-  const rect = nodes[i].getBoundingClientRect();
-  const parent = document.getElementById('map').getBoundingClientRect();
-  burstConfetti(rect.left-parent.left+60, rect.top-parent.top+20);
 }
 
-// Submit (optional Google Form)
+// ===== SUBMIT
 function buildFormUrl(){
   const params = new URLSearchParams();
   params.set(ENTRY_MAP.level, String(state.idx+1));
@@ -259,17 +225,11 @@ function buildFormUrl(){
   return `${FORM_BASE}?${params.toString()}`;
 }
 
-document.getElementById('btn-submit').addEventListener('click', ()=>{
-  const url = buildFormUrl(); window.open(url,'_blank','noopener');
-});
+document.getElementById('btn-submit').addEventListener('click', ()=>{ window.open(buildFormUrl(),'_blank','noopener'); });
+document.getElementById('btn-reset').addEventListener('click', ()=>{ if(confirm('Reset local progress? This only affects this device.')){ state = defaultState(); save(state); render(); }});
 
-document.getElementById('btn-reset').addEventListener('click', ()=>{
-  if(confirm('Reset local progress? This only affects this device.')){ state = defaultState(); save(state); render(); }
-});
-
-// ========== INIT ==========
+// ===== INIT
 render();
-window.addEventListener('resize', moveAvatar);
 </script>
 </body>
 </html>

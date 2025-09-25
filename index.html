@@ -3,233 +3,371 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AmFam Fit World — Level Quest (LocalStorage)</title>
+  <title>AmFam Runner — First‑Person Style</title>
   <style>
     :root{
-      --amfam-red:#e11d2b; --amfam-blue:#0054a6; --ink:#0f172a; --muted:#64748b; --paper:#f8fafc; --card:#ffffff; --track:#e2e8f0; --ring:rgba(0,84,166,.25);
+      /* American Family Fitness inspired (not official brand assets) */
+      --amfam-red:#e11d2b; --amfam-blue:#0054a6; --ink:#0f172a; --muted:#64748b;
+      --bg:#f6f9ff; --card:#ffffff; --track:#c7d2fe; --good:#10b981; --bad:#ef4444; --coin:#fbbf24;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:linear-gradient(180deg,#eef4ff 0,#ffffff 40%)}
-    .wrap{max-width:980px;margin:20px auto;padding:16px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    h1{margin:0;font-size:clamp(1.3rem,1.1rem+1.5vw,2.1rem);font-weight:900;letter-spacing:.2px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .brand .badge{background:linear-gradient(90deg,var(--amfam-blue),var(--amfam-red));color:#fff;padding:.25rem .6rem;border-radius:999px;font-weight:800;font-size:.85rem}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#eef4ff,#ffffff 45%);color:var(--ink)}
+    .wrap{max-width:980px;margin:0 auto;padding:12px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:8px 0}
+    h1{margin:0;font-weight:900;font-size:clamp(1.2rem,1.1rem + 1.2vw,1.8rem)}
+    .brand{background:linear-gradient(90deg,var(--amfam-blue),var(--amfam-red));color:#fff;padding:.25rem .6rem;border-radius:999px;font-weight:800;font-size:.85rem}
     .sub{color:var(--muted)}
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    button{appearance:none;border:2px solid var(--amfam-blue);background:#fff;color:var(--amfam-blue);padding:.6rem .85rem;border-radius:12px;cursor:pointer;font-weight:800;transition:.15s ease;box-shadow:0 2px 0 var(--amfam-blue)}
-    button:hover{transform:translateY(-1px)}
-    .btn-primary{background:linear-gradient(135deg,var(--amfam-blue),#3b82f6);color:#fff;border:none;box-shadow:none}
-    .btn-reset{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border:none;box-shadow:none}
 
-    .board{margin-top:14px;background:var(--paper);border:1px solid var(--track);border-radius:18px;padding:14px;box-shadow:0 12px 40px rgba(2,6,23,.08)}
+    .topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+    select,button{appearance:none;border:2px solid var(--amfam-blue);background:#fff;color:var(--amfam-blue);padding:.5rem .7rem;border-radius:12px;font-weight:800;cursor:pointer}
+    button.primary{background:linear-gradient(135deg,var(--amfam-blue),#3b82f6);border:none;color:#fff}
+    button.danger{background:linear-gradient(135deg,#ef4444,#f97316);border:none;color:#fff}
 
-    /* IMMERSIVE WORLD */
-    .world{position:relative; height:460px; overflow:hidden; border-radius:16px; border:1px solid var(--track); background:#cfe6ff}
-    .layer{position:absolute; inset:0; image-rendering:crisp-edges; will-change:transform;}
-    .sky{background:linear-gradient(180deg,#cfe6ff,#eaf3ff)}
-    .bg-hills{background:repeating-linear-gradient( -20deg, #b7d0ff 0 40px, #a7c6ff 40px 80px ); opacity:.6}
-    .mid-buildings{background:repeating-linear-gradient( 90deg, #9cc3ff 0 140px, #91b8f7 140px 280px ); clip-path:polygon(0 65%,100% 55%,100% 100%,0 100%)}
-    .floor{background:linear-gradient(180deg,#9ee57c,#70d060 60%,#58b64a); clip-path:polygon(0 72%,100% 68%,100% 100%,0 100%)}
+    .board{background:var(--card);border:1px solid var(--track);border-radius:16px;padding:10px;box-shadow:0 12px 30px rgba(2,6,23,.06)}
+    .gameWrap{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#a3c6ff 0,#d8e6ff 45%,#ffffff 100%);}
+    canvas{display:block;width:100%;height:56vh;min-height:360px;background:transparent;touch-action:none}
 
-    .track{position:absolute; left:0; top:72%; height:4px; width:3000px; background:repeating-linear-gradient(90deg,#084 0 24px,#0a5 24px 48px); box-shadow:0 2px 0 rgba(0,0,0,.15)}
-    .gate{position:absolute; top:56%; transform:translateY(-50%); width:200px}
-    .gate .card{background:var(--card);border:1px solid var(--track);border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
-    .gate h3{margin:0 0 4px 0; font-size:1rem}
-    .gate p{margin:0 0 6px 0; font-size:.9rem; color:var(--muted)}
-    .gate .meta{display:flex;gap:6px;align-items:center;font-size:.8rem;margin-bottom:6px}
-    .pill{border:1px solid var(--track);border-radius:999px;padding:.1rem .45rem;color:#0f172a;background:#f8fafc}
-    .gate.locked{filter:grayscale(.8) opacity(.75)}
-    .gate.completed .card{outline:2px solid #10b981}
+    .hud{position:absolute;inset:10px auto auto 10px;display:flex;gap:8px;flex-wrap:wrap;z-index:5}
+    .pill{background:#fff;border:1px solid var(--track);padding:.35rem .6rem;border-radius:999px;font-weight:900}
 
-    .avatar{position:absolute; top:72%; left:40px; width:28px; height:28px; border:2px solid #fff; background:linear-gradient(135deg,var(--amfam-red),var(--amfam-blue)); border-radius:50%; box-shadow:0 0 0 3px rgba(0,84,166,.25); transform:translate(-50%,-50%)}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);z-index:10}
+    .panel{background:#fff;border:1px solid var(--track);border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,.12);padding:16px;max-width:520px}
+    .panel h2{margin:0 0 8px 0}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+    .list{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .badge{border:1px solid var(--track);border-radius:10px;padding:.25rem .5rem}
 
-    .hud{position:absolute; inset:auto 12px 12px auto; display:flex; gap:8px}
-    .stat{background:#fff;border:1px solid var(--track);padding:.4rem .6rem;border-radius:10px;font-weight:800}
-
-    .stats{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 4px}
-    .progress{--p:0%;position:relative;height:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;overflow:hidden;flex:1}
-    .progress>i{position:absolute;inset:0;width:var(--p);background:linear-gradient(90deg,var(--amfam-blue),var(--amfam-red))}
-
-    .hint{color:var(--muted);font-size:.9rem}
+    .lock{opacity:.5}
+    .ok{color:var(--good)}
+    .no{color:var(--bad)}
   </style>
 </head>
 <body>
-  <div class="wrap" role="application" aria-label="AmFam Fit World">
+  <div class="wrap" role="application" aria-label="AmFam Runner">
     <header>
-      <div class="brand">
-        <h1>AmFam Fit World — Level Quest</h1>
-        <span class="badge">Virtual Gym</span>
-      </div>
-      <div class="controls" role="toolbar" aria-label="Controls">
-        <button id="btn-submit" class="btn-primary" title="Open prefilled form in a new tab">Submit Progress</button>
-        <button id="btn-reset" class="btn-reset" title="Reset local progress">Reset</button>
-      </div>
+      <h1>AmFam Runner <span class="brand">Virtual Gym</span></h1>
+      <div class="sub">Temple‑run style mini‑game for American Family Fitness — static hosting, state in localStorage.</div>
     </header>
-    <p class="sub">Progress through a virtual American Family Fitness–inspired world. Complete each level's challenge to unlock the next — no login, saved locally.</p>
+
+    <div class="topbar">
+      <label>Map:
+        <select id="mapSelect"></select>
+      </label>
+      <button class="primary" id="btnPlay">Play</button>
+      <button id="btnPause">Pause</button>
+      <button class="danger" id="btnReset">Reset</button>
+    </div>
 
     <section class="board">
-      <div class="stats" aria-live="polite">
-        <div class="stat">Level: <span id="level">1</span>/<span id="levelMax">10</span></div>
-        <div class="stat">Completed: <span id="completed">0</span></div>
-        <div class="progress" aria-label="Quest completion"><i id="bar"></i></div>
-      </div>
-      <div class="world" id="world" aria-label="AmFam Fit World">
-        <div class="layer sky" data-speed="0.1"></div>
-        <div class="layer bg-hills" data-speed="0.2"></div>
-        <div class="layer mid-buildings" data-speed="0.35"></div>
-        <div class="layer floor" data-speed="0.55"></div>
-        <div class="track" id="track"></div>
-
-        <!-- Gates (levels) placed along the track -->
-        <div class="gate" style="left:120px" data-i="0">
-          <div class="card"><h3>Level 1 — Check In</h3><p>Visit the club or check in on the app.</p><div class="meta"><span class="pill">Facility</span><span class="pill">Warmup</span></div><button class="do">Complete</button></div>
+      <div class="gameWrap">
+        <canvas id="game" aria-label="Runner canvas"></canvas>
+        <div class="hud" id="hud">
+          <div class="pill">Dist: <span id="pDist">0</span> m</div>
+          <div class="pill">Coins: <span id="pCoins">0</span></div>
+          <div class="pill">Best: <span id="pBest">0</span></div>
         </div>
-        <div class="gate" style="left:420px" data-i="1">
-          <div class="card"><h3>Level 2 — Strength</h3><p>Do a basic strength session (20 min).</p><div class="meta"><span class="pill">Weights</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:780px" data-i="2">
-          <div class="card"><h3>Level 3 — Cardio</h3><p>Cycle, run, or row for 15 min.</p><div class="meta"><span class="pill">Cardio</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:1160px" data-i="3">
-          <div class="card"><h3>Level 4 — Hydrate</h3><p>Drink 2 bottles of water today.</p><div class="meta"><span class="pill">Health</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:1520px" data-i="4">
-          <div class="card"><h3>Level 5 — Mobility</h3><p>Stretch or foam roll 10 min.</p><div class="meta"><span class="pill">Recovery</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:1860px" data-i="5">
-          <div class="card"><h3>Level 6 — Group Fitness</h3><p>Attend a class (e.g., HIIT, Yoga).</p><div class="meta"><span class="pill">Community</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:2140px" data-i="6">
-          <div class="card"><h3>Level 7 — Pool</h3><p>Swim or water-walk 10 lengths.</p><div class="meta"><span class="pill">Aquatics</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:2380px" data-i="7">
-          <div class="card"><h3>Level 8 — Virtuagym</h3><p>Complete 1 guided in‑app workout.</p><div class="meta"><span class="pill">App</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:2620px" data-i="8">
-          <div class="card"><h3>Level 9 — Fuel</h3><p>Log a balanced meal today.</p><div class="meta"><span class="pill">Nutrition</span></div><button class="do">Complete</button></div>
-        </div>
-        <div class="gate" style="left:2860px" data-i="9">
-          <div class="card"><h3>Level 10 — Finale</h3><p>Share your success photo or check‑in.</p><div class="meta"><span class="pill">Celebrate</span></div><button class="do">Complete</button></div>
-        </div>
-
-        <div class="avatar" id="avatar" title="Your marker"></div>
-        <div class="hud">
-          <div class="stat">Use ◀ ▶ or drag</div>
+        <div class="overlay" id="menu" hidden>
+          <div class="panel">
+            <h2 id="menuTitle">Paused</h2>
+            <p id="menuMsg">Swipe ⟷ to change lanes, ⤒ to jump. Avoid obstacles, grab coins.</p>
+            <div class="row">
+              <button class="primary" id="btnResume">Resume</button>
+            </div>
+            <div class="row">
+              <div><strong>Club Challenges</strong></div>
+              <div class="list" id="challengeList"></div>
+            </div>
+          </div>
         </div>
       </div>
-      <p class="hint">Immersive mode: side‑scroll through the AmFam world. Complete each gate to unlock the next. All progress is stored in localStorage.</p>>Tip: Levels unlock sequentially. Your progress is saved on this device only (localStorage). “Submit Progress” can prefill a Google Form for the club.</p>
+      <p class="sub">Controls: ←/→ or swipe to switch lanes, ↑ or tap to jump. Everything saves locally. Unlock new maps by completing in‑game goals or marking club challenges.</p>
     </section>
   </div>
 
 <script>
-// ===== CONFIG
-const BOARD_KEY = 'amfam.fitworld.immersive.v1';
-const FORM_BASE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform';
-const ENTRY_MAP = { level:'entry.100', completed:'entry.101', name:'entry.102' };
-const LEVELS = 10; // number of gates
+// ========================= CONFIG =========================
+const STORAGE_KEY = 'amfam.runner.v1';
+const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
-// ===== STATE
-const defaultState = ()=>({ idx:0, completed: Array(LEVELS).fill(false), name: localStorage.getItem('fitworld.name') || '', x: 60 });
-function load(){ try { return JSON.parse(localStorage.getItem(BOARD_KEY)) ?? defaultState(); } catch { return defaultState(); } }
-function save(s){ localStorage.setItem(BOARD_KEY, JSON.stringify(s)); }
-let state = load();
+const MAPS = [
+  {id:'gym', name:'Gym Floor', sky:'#a3c6ff', road:'#eaf1ff', lane:'#0054a6', accent:'#e11d2b', speed:7, unlock:null},
+  {id:'pool', name:'Pool Deck', sky:'#9ddcf8', road:'#e6fbff', lane:'#0ea5e9', accent:'#2563eb', speed:7.5, unlock:{type:'goal', key:'run500'}},
+  {id:'studio', name:'Group Studio', sky:'#ffdfe9', road:'#fff2f7', lane:'#e11d2b', accent:'#0054a6', speed:8, unlock:{type:'goal', key:'collect50'}},
+  {id:'city', name:'City Dash', sky:'#cfe0ff', road:'#f2f6ff', lane:'#111827', accent:'#0ea5e9', speed:8.5, unlock:{type:'club', key:'clubTask'}}
+];
 
-// ===== DOM
-const $ = (s)=>document.querySelector(s);
-const world = $('#world');
-const layers = [...document.querySelectorAll('.layer')];
-const avatar = $('#avatar');
-const gates = [...document.querySelectorAll('.gate')];
-const barEl = $('#bar');
-const completedEl = $('#completed');
-const levelEl = $('#level'); const levelMaxEl = $('#levelMax'); levelMaxEl && (levelMaxEl.textContent = LEVELS);
+const CHALLENGES = [
+  {key:'run500', label:'Run 500 m total', check:(s)=> s.meta.totalDist >= 500, kind:'goal'},
+  {key:'collect50', label:'Collect 50 coins total', check:(s)=> s.meta.totalCoins >= 50, kind:'goal'},
+  {key:'clubTask', label:'Attend a Group Fitness class', check:null, kind:'club'} // manual toggle
+];
 
-// HUD stats (reuse from earlier section if present)
-if(!levelEl || !completedEl){
-  const stats = document.createElement('div'); stats.className='stats'; stats.innerHTML = `<div class="stat">Level: <span id="level">1</span>/${LEVELS}</div><div class="stat">Completed: <span id="completed">0</span></div><div class="progress"><i id="bar"></i></div>`; world.before(stats);
-}
-
-// ===== RENDER
-function render(){
-  // Lock/unlock
-  gates.forEach(g=> g.classList.add('locked'));
-  for(let i=0;i<=state.idx;i++){ gates[i]?.classList.remove('locked'); }
-  gates.forEach((g,i)=> g.classList.toggle('completed', !!state.completed[i]));
-
-  // Buttons
-  gates.forEach((g,i)=>{
-    const btn = g.querySelector('.do');
-    btn.disabled = i>state.idx || state.completed[i];
-    btn.textContent = state.completed[i] ? 'Completed' : (i>state.idx ? 'Locked' : 'Complete');
-    btn.onclick = ()=> completeLevel(i);
-  });
-
-  // Progress
-  const done = state.completed.filter(Boolean).length;
-  const level = Math.min(done+1, LEVELS);
-  (document.getElementById('completed')||{}).textContent = done;
-  (document.getElementById('level')||{}).textContent = level;
-  (document.getElementById('bar')||{}).style?.setProperty('--p', `${Math.round((done/LEVELS)*100)}%`);
-
-  updateCamera();
-}
-
-// ===== MOVEMENT (arrow keys + drag)
-let dragging = false, dragStartX = 0, startX = 0;
-world.addEventListener('pointerdown', e=>{ dragging=true; dragStartX=e.clientX; startX = state.x; world.setPointerCapture(e.pointerId); });
-world.addEventListener('pointermove', e=>{ if(!dragging) return; const dx = e.clientX - dragStartX; state.x = Math.max(0, Math.min(2940, startX + dx)); updateCamera(); });
-world.addEventListener('pointerup', ()=> dragging=false);
-world.addEventListener('pointercancel', ()=> dragging=false);
-
-window.addEventListener('keydown', e=>{
-  if(e.key==='ArrowRight') { state.x = Math.min(2940, state.x + 24); updateCamera(); }
-  if(e.key==='ArrowLeft')  { state.x = Math.max(0, state.x - 24); updateCamera(); }
+const DEFAULT_STATE = ()=>({
+  unlocks:{ gym:true, pool:false, studio:false, city:false },
+  meta:{ totalDist:0, totalCoins:0, best:0 },
+  club:{ clubTask:false },
+  lastMap:'gym'
 });
 
-function updateCamera(){
-  // Parallax: move layers at different speeds opposite to avatar X
-  const cam = Math.max(0, Math.min(2600, state.x - world.clientWidth*0.5));
-  layers.forEach(l=>{
-    const sp = parseFloat(l.dataset.speed||'0.2');
-    l.style.transform = `translateX(${-cam*sp}px)`;
+function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_STATE(); }catch{ return DEFAULT_STATE(); } }
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = load();
+
+// ========================= DOM =========================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const mapSelect = document.getElementById('mapSelect');
+const pDist = document.getElementById('pDist');
+const pCoins = document.getElementById('pCoins');
+const pBest = document.getElementById('pBest');
+const menu = document.getElementById('menu');
+const menuTitle = document.getElementById('menuTitle');
+const menuMsg = document.getElementById('menuMsg');
+const btnResume = document.getElementById('btnResume');
+const btnPlay = document.getElementById('btnPlay');
+const btnPause = document.getElementById('btnPause');
+const btnReset = document.getElementById('btnReset');
+const challengeList = document.getElementById('challengeList');
+
+// Build map select
+function refreshMapSelect(){
+  mapSelect.innerHTML = '';
+  MAPS.forEach(m => {
+    const opt = document.createElement('option');
+    const locked = !state.unlocks[m.id];
+    opt.value = m.id;
+    opt.textContent = locked ? `${m.name} (Locked)` : m.name;
+    opt.disabled = locked;
+    mapSelect.appendChild(opt);
   });
-  // Move gates and track relative to camera (they are inside world, positioned absolute by left)
-  const offset = -cam; gates.forEach(g=> g.style.transform = `translateX(${offset}px)`);
-  document.getElementById('track').style.transform = `translateX(${offset}px)`;
+  const exists = MAPS.find(m=> m.id===state.lastMap && state.unlocks[m.id]);
+  mapSelect.value = exists ? state.lastMap : 'gym';
+}
+refreshMapSelect();
 
-  // Avatar follows ground and stays near center
-  avatar.style.left = (world.clientWidth*0.5)+'px';
+// Challenges UI
+function refreshChallenges(){
+  challengeList.innerHTML = '';
+  CHALLENGES.forEach(ch => {
+    const wrap = document.createElement('div');
+    const ok = ch.kind==='goal' ? ch.check(state) : !!state.club[ch.key];
+    wrap.className = 'badge';
+    wrap.innerHTML = `<span>${ok? '✅' : '🔒'} ${ch.label}</span>`;
+    if(ch.kind==='club'){
+      const b = document.createElement('button');
+      b.textContent = ok? 'Marked' : 'Mark done';
+      b.style.marginLeft = '6px';
+      b.onclick = () => { state.club[ch.key] = !state.club[ch.key]; recalcUnlocks(); save(); refreshChallenges(); refreshMapSelect(); };
+      wrap.appendChild(b);
+    }
+    challengeList.appendChild(wrap);
+  });
+}
+refreshChallenges();
 
-  // Save position
-  save(state);
+function recalcUnlocks(){
+  CHALLENGES.forEach(ch => {
+    const ok = ch.kind==='goal' ? ch.check(state) : !!state.club[ch.key];
+    MAPS.forEach(m => { if(m.unlock && m.unlock.key===ch.key && ok) state.unlocks[m.id] = true; });
+  });
+}
+recalcUnlocks(); save(); refreshMapSelect();
+
+// ========================= GAME CORE =========================
+const game = {
+  running:false, over:false, lastT:0,
+  map: MAPS.find(m=> m.id === (state.lastMap || 'gym')) || MAPS[0],
+  lane:1, targetLane:1,
+  jumpT:0, jumping:false,
+  distance:0, coins:0, speed:7,
+  spawnT:0, coinT:0,
+  objs:[], coinsArr:[]
+};
+
+const LANES = [ -0.9, 0, 0.9 ]; // left, mid, right offsets
+const JUMP_DUR = 0.8; // seconds
+const JUMP_H = 42; // px at bottom scale
+
+function setMap(id){
+  const m = MAPS.find(x=>x.id===id) || MAPS[0];
+  if(!state.unlocks[m.id]) return; // locked
+  game.map = m; game.speed = m.speed; state.lastMap = m.id; save();
+}
+mapSelect.onchange = e => { setMap(e.target.value); };
+
+function resize(){
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.floor(rect.width * DPR);
+  canvas.height = Math.floor(rect.height * DPR);
+}
+window.addEventListener('resize', resize); resize();
+
+function resetRun(){
+  game.running = false; game.over = false;
+  game.lane = 1; game.targetLane = 1; game.jumping = false; game.jumpT = 0;
+  game.distance = 0; game.coins = 0; game.spawnT = 0; game.coinT = 0; game.objs=[]; game.coinsArr=[];
+}
+resetRun();
+
+function start(){
+  if(menu) menu.hidden = true;
+  resetRun();
+  game.running = true; game.lastT = performance.now();
+  requestAnimationFrame(loop);
 }
 
-// ===== COMPLETION
-function completeLevel(i){
-  if(i>state.idx) return; // locked
-  if(state.completed[i]) return;
-  state.completed[i] = true;
-  if(state.idx < LEVELS-1) state.idx = Math.max(state.idx, i+1);
-  save(state);
-  render();
+function pause(){ game.running = false; menuTitle.textContent = 'Paused'; menuMsg.textContent = 'Tap Resume to continue.'; menu.hidden = false; }
+function gameOver(){
+  game.running = false; game.over = true; menuTitle.textContent = 'Game Over'; menuMsg.textContent = 'You hit an obstacle. Play again?'; menu.hidden = false;
+  // totals
+  state.meta.totalDist += Math.round(game.distance);
+  state.meta.totalCoins += game.coins;
+  state.meta.best = Math.max(state.meta.best, Math.round(game.distance));
+  pBest.textContent = state.meta.best;
+  recalcUnlocks(); save(); refreshChallenges(); refreshMapSelect();
 }
 
-// ===== SUBMIT
-function buildFormUrl(){
-  const params = new URLSearchParams();
-  params.set(ENTRY_MAP.level, String(state.idx+1));
-  params.set(ENTRY_MAP.completed, state.completed.map(v=>v?1:0).join(','));
-  const who = prompt('Enter your name or member ID (optional):', state.name || '');
-  if(who!==null){ state.name = who; localStorage.setItem('fitworld.name', who); save(state); params.set(ENTRY_MAP.name, who); }
-  return `${FORM_BASE}?${params.toString()}`;
+btnPlay.onclick = ()=>{ start(); };
+btnPause.onclick = ()=>{ if(game.running) pause(); };
+btnReset.onclick = ()=>{ if(confirm('Reset all saved progress on this device?')){ state = DEFAULT_STATE(); save(); refreshMapSelect(); refreshChallenges(); resetRun(); pBest.textContent = state.meta.best; } };
+btnResume.onclick = ()=>{ menu.hidden = true; game.running = true; game.lastT = performance.now(); requestAnimationFrame(loop); };
+
+// ========================= INPUT =========================
+window.addEventListener('keydown', e => {
+  if(e.key==='ArrowLeft' || e.key==='a') game.targetLane = Math.max(0, game.targetLane-1);
+  if(e.key==='ArrowRight'|| e.key==='d') game.targetLane = Math.min(2, game.targetLane+1);
+  if(e.key==='ArrowUp' || e.key==='w' || e.code==='Space') jump();
+});
+let touchStart = null;
+canvas.addEventListener('pointerdown', e=>{ touchStart = {x:e.clientX, y:e.clientY, t:performance.now()}; });
+canvas.addEventListener('pointerup', e=>{
+  if(!touchStart) return; const dx = e.clientX - touchStart.x; const dy = e.clientY - touchStart.y; const ax = Math.abs(dx), ay = Math.abs(dy);
+  if(Math.max(ax,ay) < 24){ jump(); }
+  else if(ax>ay){ if(dx>0) game.targetLane = Math.min(2, game.targetLane+1); else game.targetLane = Math.max(0, game.targetLane-1); }
+  else if(dy<0){ jump(); }
+  touchStart = null;
+});
+
+function jump(){ if(!game.jumping){ game.jumping = true; game.jumpT = 0; } }
+
+// ========================= WORLD / DRAW =========================
+function lerp(a,b,t){ return a + (b-a)*t; }
+
+function laneX(lane, z){
+  const w = canvas.width, h = canvas.height;
+  const cx = w*0.5; const laneSpan = w*0.22; // base lane spacing
+  const persp = 1/(z+1); // far -> small
+  return cx + LANES[lane]*laneSpan*persp;
 }
 
-document.getElementById('btn-submit').addEventListener('click', ()=>{ window.open(buildFormUrl(),'_blank','noopener'); });
-document.getElementById('btn-reset').addEventListener('click', ()=>{ if(confirm('Reset local progress? This only affects this device.')){ state = defaultState(); save(state); render(); }});
+function zToY(z){
+  const h = canvas.height; const horizon = h*0.35; const ground = h*0.95;
+  const t = 1/(z+1); // 1 near, small when far
+  return Math.round( lerp(ground, horizon, 1 - t) ); // far -> near horizon
+}
 
-// ===== INIT
-render();
+function sizeFromZ(base, z){ return Math.max(6, Math.round(base * (1/(z+1)) * DPR*1.6)); }
+
+function spawnObstacle(){
+  const lane = Math.floor(Math.random()*3);
+  const type = Math.random()<0.8 ? 'box' : 'low';
+  const z = 8 + Math.random()*4; // distance
+  game.objs.push({ lane, z, type });
+}
+function spawnCoin(){
+  const lane = Math.floor(Math.random()*3);
+  const z = 6 + Math.random()*4;
+  game.coinsArr.push({ lane, z });
+}
+
+function update(dt){
+  // lane smoothing
+  game.lane += (game.targetLane - game.lane)*Math.min(1, dt*10);
+  // jump
+  if(game.jumping){ game.jumpT += dt; if(game.jumpT>=JUMP_DUR){ game.jumping=false; game.jumpT=0; } }
+  const jumpY = game.jumping ? Math.sin((game.jumpT/JUMP_DUR)*Math.PI) * JUMP_H * DPR : 0;
+
+  // advance world
+  game.distance += game.speed * dt * 10; // scale to meters-ish
+  pDist.textContent = Math.round(game.distance);
+  pCoins.textContent = game.coins;
+  pBest.textContent = state.meta.best;
+
+  game.spawnT -= dt; if(game.spawnT<=0){ spawnObstacle(); game.spawnT = 0.8 + Math.random()*0.6; }
+  game.coinT -= dt; if(game.coinT<=0){ spawnCoin(); game.coinT = 0.5 + Math.random()*0.8; }
+
+  // move objects forward
+  [...game.objs].forEach(o => { o.z -= (game.speed*dt); if(o.z<=0){ const idx = game.objs.indexOf(o); if(idx>=0) game.objs.splice(idx,1); } });
+  [...game.coinsArr].forEach(c => { c.z -= (game.speed*dt); if(c.z<=0){ const idx = game.coinsArr.indexOf(c); if(idx>=0) game.coinsArr.splice(idx,1); } });
+
+  // collisions
+  for(const o of game.objs){
+    if(o.z<0.25 && Math.abs(game.lane - o.lane)<0.34){
+      const hitAir = jumpY > (o.type==='low' ? 10*DPR : 30*DPR); // need a bit of lift
+      if(!hitAir){ gameOver(); return; }
+    }
+  }
+  for(const c of [...game.coinsArr]){
+    if(c.z<0.3 && Math.abs(game.lane - c.lane)<0.34){ game.coins++; const i = game.coinsArr.indexOf(c); if(i>=0) game.coinsArr.splice(i,1); }
+  }
+
+  // draw
+  draw(jumpY);
+}
+
+function draw(jumpY){
+  const w = canvas.width, h = canvas.height;
+  // bg
+  ctx.clearRect(0,0,w,h);
+  // sky
+  ctx.fillStyle = game.map.sky; ctx.fillRect(0,0,w,h);
+  // road (trapezoid)
+  const horizon = h*0.35, ground = h*0.98, roadWTop = w*0.1, roadWBottom = w*0.85;
+  ctx.fillStyle = game.map.road; ctx.beginPath();
+  ctx.moveTo((w-roadWTop)/2, horizon); ctx.lineTo((w+roadWTop)/2, horizon); ctx.lineTo((w+roadWBottom)/2, ground); ctx.lineTo((w-roadWBottom)/2, ground); ctx.closePath(); ctx.fill();
+  // lane lines
+  ctx.strokeStyle = game.map.lane; ctx.lineWidth = Math.max(2, w*0.004);
+  for(let i=0;i<3;i++){
+    const xTop = w/2 + LANES[i]*(w*0.1);
+    const xBot = w/2 + LANES[i]*(w*0.42);
+    ctx.beginPath(); ctx.moveTo(xTop, horizon); ctx.lineTo(xBot, ground); ctx.stroke();
+  }
+
+  // obstacles
+  for(const o of game.objs){
+    const x = laneX(o.lane, o.z); const y = zToY(o.z);
+    const size = sizeFromZ(80, o.z);
+    ctx.fillStyle = o.type==='low' ? '#475569' : '#0f172a';
+    const hgt = o.type==='low' ? size*0.35 : size*0.9;
+    ctx.fillRect(x - size*0.45, y - hgt, size*0.9, hgt);
+  }
+  // coins
+  for(const c of game.coinsArr){
+    const x = laneX(c.lane, c.z); const y = zToY(c.z); const r = sizeFromZ(28, c.z);
+    ctx.beginPath(); ctx.fillStyle = 'gold'; ctx.arc(x, y - r*0.4, r*0.5, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  }
+
+  // player (triangle)
+  const px = laneX(game.lane, 0); const py = zToY(0) - jumpY;
+  const pw = w*0.05; const ph = w*0.06;
+  ctx.fillStyle = 'white'; ctx.strokeStyle = game.map.accent; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(px, py - ph); ctx.lineTo(px - pw*0.6, py); ctx.lineTo(px + pw*0.6, py); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+
+function loop(t){
+  if(!game.running) return;
+  const dt = Math.min((t - game.lastT)/1000, 0.033); game.lastT = t;
+  update(dt);
+  requestAnimationFrame(loop);
+}
+
+// Show initial menu
+menu.hidden = false; menuTitle.textContent = 'Tap Play to start';
+
+// Initialize counters
+pBest.textContent = state.meta.best;
+
 </script>
 </body>
 </html>
